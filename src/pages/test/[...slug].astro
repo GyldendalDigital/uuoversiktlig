@@ -11,7 +11,7 @@ export async function getStaticPaths() {
 type Props = CollectionEntry<'test'>;
 
 const post = Astro.props;
-const jsonurl = `https://github.com/GyldendalDigital/uuoversiktlig/src/content/test/${post.id}.json`;
+const jsonurl = `https://raw.githubusercontent.com/GyldendalDigital/uuoversiktlig/main/src/content/test/${post.id}.json`;
 ---
 
 <a href={`https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${jsonurl}`}>Lighthouse viewer</a>
