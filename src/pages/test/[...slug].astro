@@ -1,0 +1,17 @@
+---
+import { type CollectionEntry, getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('test');
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: post,
+	}));
+}
+type Props = CollectionEntry<'test'>;
+
+const post = Astro.props;
+const jsonurl = `https://github.com/GyldendalDigital/uuoversiktlig/src/content/test/${post.id}.json`;
+---
+
+<a href={`https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${jsonurl}`}>Lighthouse viewer</a>
