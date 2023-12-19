@@ -1,64 +1,42 @@
 import express from "express";
-import { launch } from "puppeteer";
-import lighthouse from "lighthouse";
 import ejs from "ejs";
-import {
-  userAgents,
-  screenEmulationMetrics,
-} from "lighthouse/core/config/constants.js";
+import { runLighthouse } from "./uu.js";
+import { saveBlob } from "./db.js";
+
+console.debug("Setting up server");
 
 const Express = express;
-
 const router = Express.Router();
 
 router.get("/", async (req, res) => {
-  res.render("index", { title: "Express" });
+  res.render("index", { title: "uuoversiktlig" });
 });
 
-/** @type {import("lighthouse/types/config").default} */
-const config = {
-  extends: "lighthouse:default",
-  settings: {
-    output: "html",
-    onlyCategories: ["accessibility"],
-    formFactor: "desktop",
-    screenEmulation: screenEmulationMetrics.desktop,
-    emulatedUserAgent: userAgents.desktop,
-    skipAudits: [
-      "td-has-header",
-      "table-fake-caption",
-      "label-content-name-mismatch",
-    ],
-  },
-};
+router.post("/run", async (req, res) => {
+  const url = req.body.url || "https://www.google.com";
 
-router.get("/run", async (req, res) => {
-  console.log("starter");
+  const result = await runLighthouse(url);
 
-  const browser = await launch({
-    headless: "new",
+  const id = url.split("://")[1];
+  var blobUrl = await saveBlob(id, JSON.stringify(result.lhr));
+
+  res.send({
+    url,
+    score: result.lhr.categories.accessibility.score,
+    blobUrl,
   });
-
-  const page = await browser.newPage();
-
-  const result = await lighthouse(
-    "https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli",
-    { disableStorageReset: true },
-    config,
-    page
-  );
-
-  console.log("r", result.lhr.categories.accessibility.score);
-
-  res.send("Hello World");
   res.end();
 });
 
 const server = Express();
+
 server.engine(".html", ejs.renderFile);
 server.set("view engine", "html");
 server.use(express.static("public"));
-server.use(router);
-server.listen(process.env.PORT || 3000);
 
-export default server;
+server.use(express.json());
+server.use(router);
+
+const port = process.env.PORT || 3000;
+console.debug("Listening on http://localhost:" + port);
+server.listen(port);

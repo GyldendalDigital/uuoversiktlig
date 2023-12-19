@@ -2,10 +2,50 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <header>
+      <h1><%= title %></h1>
+
+      <label for="input">Url</label>
+      <input type="textarea" id="input" />
+      <button id="button">Test</button>
+    </header>
+
+    <img
+      src="https://media.giphy.com/media/tXL4FHPSnVJ0A/giphy.gif"
+      id="loader"
+    />
+    <iframe id="report"></iframe>
   </body>
+  <script>
+    var input = document.getElementById("input");
+    var button = document.getElementById("button");
+
+    button.addEventListener("click", function () {
+      document.getElementById("loader").style.display = "block";
+      document.getElementById("report").src = "";
+      fetch("/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: input.value,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Success:", data);
+          document.getElementById("loader").style.display = "none";
+          document.getElementById(
+            "report"
+          ).src = `https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${data.blobUrl}`;
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    });
+  </script>
 </html>
