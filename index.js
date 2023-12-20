@@ -1,7 +1,8 @@
 import express from "express";
 import ejs from "ejs";
 import { runLighthouse } from "./uu.js";
-import { saveBlob } from "./db.js";
+import { saveBlob } from "./blobStorage.js";
+import { saveRecords, searchFacets, searchRecords } from "./searchClient.js";
 
 console.debug("Setting up server");
 
@@ -13,19 +14,43 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/run", async (req, res) => {
-  const url = req.body.url || "https://www.google.com";
+  if (!req.body.url || !req.body.url.includes("://")) {
+    res.status(400).send("Invalid URL");
+    return;
+  }
 
-  const result = await runLighthouse(url);
+  const url = (req.body.url || "https://www.google.com").replace(/\/$/, "");
 
-  const id = url.split("://")[1];
-  var blobUrl = await saveBlob(id, JSON.stringify(result.lhr));
+  const { title, totalScore, result } = await runLighthouse(url);
 
-  res.send({
+  const id = url.split("://")[1].replaceAll("/", "-");
+
+  const jsonUrl = await saveBlob(id, JSON.stringify(result.lhr));
+
+  const record = {
+    objectID: id,
+    title,
+    totalScore,
     url,
-    score: result.lhr.categories.accessibility.score,
-    blobUrl,
-  });
+    jsonUrl,
+  };
+
+  await saveRecords([record]);
+
+  res.send(record);
   res.end();
+});
+
+router.post("/search", async ({ body }, res) => {
+  const { requests } = body;
+  const results = await searchRecords(requests);
+  res.status(200).send(results);
+});
+
+router.post("/sffv", async ({ body }, res) => {
+  const { requests } = body;
+  const results = await searchFacets(requests);
+  res.status(200).send(results);
 });
 
 const server = Express();
