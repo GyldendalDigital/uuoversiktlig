@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <%- include('./partials/head.html') %>
+
+  <body>
+    <%- include('./partials/header.html') %>
+
+    <main>
+      <div class="ingress"><%= subtitle %></div>
+
+      <div class="container">
+        <div class="search-panel">
+          <div class="search-panel__filters">
+            <div id="audits"></div>
+          </div>
+
+          <div class="search-panel__results">
+            <div id="searchbox"></div>
+            <div id="hits"></div>
+            <div id="pagination"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+  <script>
+    const ALGOLIA_APP_ID = "<%= ALGOLIA_APP_ID %>";
+    const ALGOLIA_API_KEY_FRONTEND = "<%= ALGOLIA_API_KEY_FRONTEND %>";
+    const ALGOLIA_INDEX_NAME = "<%= ALGOLIA_INDEX_NAME %>";
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.22.0/dist/algoliasearch.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.63.0/dist/instantsearch.production.min.js"></script>
+  <script src="searchWidget.js"></script>
+</html>

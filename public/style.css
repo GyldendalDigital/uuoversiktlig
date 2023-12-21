@@ -10,12 +10,18 @@ body {
 }
 
 header {
-  height: 15vh;
-  padding: 30px 50px;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr auto;
+  margin: 1rem;
+}
 
-  label {
-    display: block;
-  }
+main {
+  margin: 1rem;
+}
+
+.ingress {
+  margin-bottom: 1rem;
 }
 
 #loader,
@@ -30,6 +36,10 @@ iframe {
 }
 
 /* Algolia */
+
+.container {
+  padding-top: 1rem;
+}
 
 .header {
   display: flex;
@@ -60,14 +70,9 @@ iframe {
   font-size: 1.2rem;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
 .search-panel {
   display: flex;
+  gap: 1rem;
 }
 
 .search-panel__filters {

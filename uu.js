@@ -25,7 +25,7 @@ const config = {
 /**
  *
  * @param {string} url
- * @returns {Promise<{title: string, totalScore: number, result: import("lighthouse").RunnerResult}>}
+ * @returns {Promise<{title: string, totalScore: number, failingAudits: import("./types").LighthouseAudit[]}, result: import("lighthouse").RunnerResult}>}
  */
 const runLighthouse = async (url) => {
   console.debug("Launching browser");
@@ -47,10 +47,13 @@ const runLighthouse = async (url) => {
 
   const title = await page.title();
   const totalScore = result.lhr.categories.accessibility.score;
-  // const audits = objectMap(result.lhr.audits, toSimpleAudit);
+  const failingAudits = objectMap(result.lhr.audits, toSimpleAudit).filter(
+    (a) => a.score !== null && a.score !== 1
+  );
 
-  console.debug("Lighthouse done", title, totalScore);
-  return { title, totalScore, result };
+  console.debug("Lighthouse done", title, totalScore, failingAudits);
+
+  return { title, totalScore, failingAudits, result };
 };
 
 export { runLighthouse };
@@ -63,4 +66,4 @@ export { runLighthouse };
 const toSimpleAudit = (a) => ({ id: a.id, title: a.title, score: a.score });
 
 const objectMap = (obj, fn) =>
-  Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+  Object.entries(obj).map(([k, v], i) => fn(v, k, i));

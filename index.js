@@ -10,7 +10,20 @@ const Express = express;
 const router = Express.Router();
 
 router.get("/", async (req, res) => {
-  res.render("index", { title: "uuoversiktlig" });
+  res.render("search", {
+    title: "uuoversiktlig",
+    subtitle: "Finn UU-testa sider",
+    ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
+    ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
+  });
+});
+
+router.get("/test", async (req, res) => {
+  res.render("manual-url-test", {
+    title: "uuoversiktlig",
+    subtitle: "UU-test en side",
+  });
 });
 
 router.post("/run", async (req, res) => {
@@ -21,7 +34,7 @@ router.post("/run", async (req, res) => {
 
   const url = (req.body.url || "https://www.google.com").replace(/\/$/, "");
 
-  const { title, totalScore, result } = await runLighthouse(url);
+  const { title, totalScore, failingAudits, result } = await runLighthouse(url);
 
   const id = url.split("://")[1].replaceAll("/", "-");
 
@@ -31,6 +44,7 @@ router.post("/run", async (req, res) => {
     objectID: id,
     title,
     totalScore,
+    failingAudits,
     url,
     jsonUrl,
   };
@@ -41,12 +55,14 @@ router.post("/run", async (req, res) => {
   res.end();
 });
 
+/** Optional proxy of search through our backend */
 router.post("/search", async ({ body }, res) => {
   const { requests } = body;
   const results = await searchRecords(requests);
   res.status(200).send(results);
 });
 
+/** Optional proxy of search through our backend */
 router.post("/sffv", async ({ body }, res) => {
   const { requests } = body;
   const results = await searchFacets(requests);

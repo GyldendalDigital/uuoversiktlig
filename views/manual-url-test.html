@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <%- include('./partials/head.html') %>
+
+  <body>
+    <%- include('./partials/header.html') %>
+
+    <main>
+      <div class="ingress">
+        <label for="input"><%= subtitle %></label>
+        <input type="textarea" id="input" />
+        <button id="button">Test</button>
+      </div>
+
+      <img
+        src="https://media.giphy.com/media/tXL4FHPSnVJ0A/giphy.gif"
+        id="loader"
+      />
+
+      <img
+        src="https://media.giphy.com/media/TqiwHbFBaZ4ti/giphy.gif"
+        id="error"
+      />
+    </main>
+
+    <iframe id="report"></iframe>
+  </body>
+
+  <script>
+    // test HTMX?
+    var input = document.getElementById("input");
+    var button = document.getElementById("button");
+
+    button.addEventListener("click", function () {
+      document.getElementById("error").style.display = "none";
+      document.getElementById("loader").style.display = "block";
+      document.getElementById("report").src = "";
+      fetch("/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: input.value,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Success:", data);
+          document.getElementById("error").style.display = "none";
+          document.getElementById("loader").style.display = "none";
+          document.getElementById(
+            "report"
+          ).src = `https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${data.jsonUrl}`;
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("error").style.display = "block";
+        });
+    });
+  </script>
+</html>
