@@ -4,15 +4,15 @@ import { runLighthouse } from "./uu.js";
 import { saveBlob } from "./blobStorage.js";
 import { saveRecords, searchFacets, searchRecords } from "./searchClient.js";
 
-console.debug("Setting up server");
-
 const Express = express;
 const router = Express.Router();
+
+const log = (msg, ...rest) => console.debug(`[Server] ${msg}`, ...rest);
 
 router.get("/", async (req, res) => {
   res.render("search", {
     title: "uuoversiktlig",
-    subtitle: "Finn UU-testa sider",
+    subtitle: "Let fram (u)utilgjengelige sider",
     ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
     ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
     ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
 router.get("/test", async (req, res) => {
   res.render("manual-url-test", {
     title: "uuoversiktlig",
-    subtitle: "UU-test en side",
+    subtitle: "Sjekk (u)utilgjengeligheten på en side",
   });
 });
 
@@ -34,19 +34,17 @@ router.post("/run", async (req, res) => {
 
   const url = (req.body.url || "https://www.google.com").replace(/\/$/, "");
 
-  const { title, totalScore, failingAudits, result } = await runLighthouse(url);
+  const { lighthouseReport, ...uiTestRecord } = await runLighthouse(url);
 
   const id = url.split("://")[1].replaceAll("/", "-");
 
-  const jsonUrl = await saveBlob(id, JSON.stringify(result.lhr));
+  const jsonUrl = await saveBlob(id, JSON.stringify(lighthouseReport));
 
   const record = {
     objectID: id,
-    title,
-    totalScore,
-    failingAudits,
     url,
     jsonUrl,
+    ...uiTestRecord,
   };
 
   await saveRecords([record]);
@@ -79,5 +77,5 @@ server.use(express.json());
 server.use(router);
 
 const port = process.env.PORT || 3000;
-console.debug("Listening on http://localhost:" + port);
 server.listen(port);
+log("listening on http://localhost:" + port);

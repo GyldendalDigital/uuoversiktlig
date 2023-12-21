@@ -22,12 +22,12 @@ const index = client.initIndex(ALGOLIA_INDEX_NAME);
  * @param {import("./types").SearchRecord[]} records
  */
 export const saveRecords = async (records) => {
-  console.debug("Indexing records", records);
+  log("indexing records", records);
   try {
     const indexResult = await index.saveObjects(records);
     return indexResult.objectIDs;
   } catch (error) {
-    console.error("Indexing error", error);
+    log("indexing error", error);
     throw error;
   }
 };
@@ -35,3 +35,5 @@ export const saveRecords = async (records) => {
 export const searchRecords = async (requests) => client.search(requests);
 export const searchFacets = async (requests) =>
   client.searchForFacetValues(requests);
+
+const log = (msg, ...rest) => console.debug(`[Algolia] ${msg}`, ...rest);

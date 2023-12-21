@@ -1,8 +1,15 @@
 export interface SearchRecord {
   objectID: string;
-  testUrl: string;
-  score: number;
+  url: string;
   jsonUrl: string;
+
+  // uiTestRecord
+  title: string;
+  totalElapsedMs: number;
+  hasIdentialLabels: boolean;
+  lighthouseElapsedMs: number;
+  lighthouseTotalScore: number;
+  lighthouseFailingAudits: LighthouseAudit[];
 }
 
 export interface LighthouseResult {

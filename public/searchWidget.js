@@ -19,7 +19,19 @@ search.addWidgets([
         <article>
           <h3>${hit.title}</h3>
           <p>${hit.url}</p>
-          <p>Score: ${hit.totalScore * 100}%</p>
+          <p>
+            Score:
+            ${hit.lighthouseTotalScore ? " " + (hit.lighthouseTotalScore * 100) : null}%
+          </p>
+          <p>Identiske ledetekster: ${hit.identicalLabelCount}</p>
+          <p>
+            Tags:
+            ${hit.learningMaterials
+              ? ` ${hit.learningMaterials.join(", ")} `
+              : null}
+            ${hit.subjects ? `${hit.subjects.join(", ")} ` : null}
+            ${hit.grades ? `${hit.grades.join(", ")} ` : null}
+          </p>
           <a
             href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"
             target="_blank"
@@ -35,10 +47,28 @@ search.addWidgets([
   //   hitsPerPage: 8,
   // }),
   instantsearch.widgets.panel({
+    templates: { header: "Verk" },
+  })(instantsearch.widgets.refinementList)({
+    container: "#learning-materials",
+    attribute: "learningMaterials",
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Fag" },
+  })(instantsearch.widgets.refinementList)({
+    container: "#subjects",
+    attribute: "subjects",
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Trinn" },
+  })(instantsearch.widgets.refinementList)({
+    container: "#grades",
+    attribute: "grades",
+  }),
+  instantsearch.widgets.panel({
     templates: { header: "Anmerkninger" },
   })(instantsearch.widgets.refinementList)({
     container: "#audits",
-    attribute: "failingAudits.title",
+    attribute: "lighthouseFailingAudits.title",
   }),
   // instantsearch.widgets.pagination({
   //   container: "#pagination",

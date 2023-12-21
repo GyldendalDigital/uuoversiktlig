@@ -42,15 +42,15 @@ const saveBlob = async (id, json) => {
   // Get a block blob client
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-  console.debug("Saving blob", blobName);
-
   // Upload data to the blob
   const uploadBlobResponse = await blockBlobClient.upload(json, json.length);
   if (!uploadBlobResponse.errorCode) {
-    console.debug("Blob was uploaded successfully", blobName);
+    log("uploaded successfully", blobName);
   }
 
   return createBlobUrl(blobName);
 };
 
 export { saveBlob };
+
+const log = (msg, ...rest) => console.debug(`[Blob] ${msg}`, ...rest);
