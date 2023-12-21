@@ -73,10 +73,18 @@ iframe {
 .search-panel {
   display: flex;
   gap: 1rem;
+
+  @media screen and (max-width: 768px) {
+    flex-direction: column;
+  }
 }
 
 .search-panel__filters {
   flex: 1;
+
+  @media screen and (min-width: 768px) {
+    max-width: 50%;
+  }
 }
 
 .search-panel__results {
