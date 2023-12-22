@@ -105,12 +105,13 @@ iframe {
 }
 
 .ais-Hits-item article {
-  display: flex;
+  display: grid;
+  grid-template-columns: 6rem auto;
   gap: 1rem;
+  position: relative;
+  width: 100%;
 }
 .ais-Hits-item article .hit-image {
-  width: 100px;
-
   img {
     width: 100%;
   }
@@ -123,10 +124,28 @@ iframe {
 }
 
 #searchbox {
-  margin-bottom: 2rem;
+  margin-bottom: 4px;
 }
 
 #pagination {
   margin: 2rem auto;
   text-align: center;
+}
+
+.redaptic-link {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.redaptic-svg {
+  width: 1rem;
+}
+
+.red {
+  color: #ac0b00;
+}
+
+.grey {
+  color: #666;
 }

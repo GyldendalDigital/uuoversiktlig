@@ -84,28 +84,23 @@ const runBrowserTest = async (url) => {
   });
 
   // fetch all h elements (sections in Skolestudio translates h1 to h3 and so on)
-  const hCount = await page.evaluate(() => {
-    const h3 = Array.from(document.querySelectorAll("h3"));
-    const h4 = Array.from(document.querySelectorAll("h4"));
-    const h5 = Array.from(document.querySelectorAll("h5"));
-    const h6 = Array.from(document.querySelectorAll("h6"));
-
-    return { h3: h3.length, h4: h4.length, h5: h5.length, h6: h6.length };
-  });
+  const hCount = await page.evaluate(() =>
+    ["h3", "h4", "h5", "h6"].reduce((a, v) => ({ ...a, [v + "Count"]: document.querySelectorAll(v).length }), {})
+  );
 
   // check sc-labels with headings as children
-  const scLabelsWithHeadingCount = await page.evaluate(() => {
-    document.querySelectorAll(
-      "section[class^='sc-label'] h3, section[class^='sc-label'] h4, section[class^='sc-label'] h5, section[class^='sc-label'] h6"
-    ).length;
-  });
+  const scLabelsWithHeadingCount = await page.evaluate(
+    () =>
+      document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-label'] ${h}`).join(", "))
+        .length
+  );
 
   // check sc-expands with headings as children
-  const scExpandsWithHeadingCount = await page.evaluate(() => {
-    document.querySelectorAll(
-      "section[class^='sc-expand'] h3, section[class^='sc-expand'] h4, section[class^='sc-expand'] h5, section[class^='sc-expand'] h6"
-    ).length;
-  });
+  const scExpandsWithHeadingCount = await page.evaluate(
+    () =>
+      document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-expand'] ${h}`).join(", "))
+        .length
+  );
 
   const activityData = await page.evaluate(() => {
     // @ts-ignore
@@ -140,11 +135,15 @@ const runBrowserTest = async (url) => {
 
   log("other end", url);
 
-  /// RETURN
+  const title = await page.title();
+
+  /// CLEANUP AND RETURN
+
+  await browser.close();
 
   const uiTestRecord = {
     ...activityData,
-    title: await page.title(),
+    title,
     totalElapsedMs: Date.now() - start,
     url,
 
@@ -158,8 +157,6 @@ const runBrowserTest = async (url) => {
     scLabelsWithHeadingCount,
     scExpandsWithHeadingCount,
   };
-
-  log(JSON.stringify({ ...uiTestRecord, lighthouseReport: null }, null, 2));
 
   return uiTestRecord;
 };

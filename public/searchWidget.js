@@ -24,6 +24,23 @@ const createContentUrl = (originalUrl) => {
   return "https://stage.skolestudio.no/view--" + contentId;
 };
 
+const createRedapticUrl = (originalUrl) => {
+  if (!originalUrl) return "";
+  if (!originalUrl.includes("/preview-content/")) return originalUrl;
+
+  const contentId = originalUrl.split("/preview-content/")[1];
+  return "https://redaptic.gyldendaldigital.no/" + contentId;
+};
+
+const createHeaderCountPreview = (hit) => {
+  const headers = [];
+  if (!!hit["h3Count"]) headers.push("H1");
+  if (!!hit["h4Count"]) headers.push("H2");
+  if (!!hit["h5Count"]) headers.push("H3");
+  if (!!hit["h6Count"]) headers.push("H4");
+  return headers.join(" ");
+};
+
 search.addWidgets([
   instantsearch.widgets.searchBox({
     container: "#searchbox",
@@ -39,7 +56,11 @@ search.addWidgets([
           <div class="hit-content">
             <h3><a href="${createContentUrl(hit.url)}" target="_blank" rel="noopener noreferrer">${hit.title}</a></h3>
             <p>
-              Score: ${hit.lighthouseTotalScore ? " " + hit.lighthouseTotalScore * 100 : null}% ${" "}
+              ${hit.learningMaterials ? ` ${hit.learningMaterials.join(", ")} ` : null}
+              ${hit.subjects ? `${hit.subjects.join(", ")} ` : null} ${hit.grades ? `${hit.grades.join(", ")} ` : null}
+            </p>
+            <p>
+              Automatisk test score: ${hit.lighthouseTotalScore ? " " + hit.lighthouseTotalScore * 100 : null}% ${" "}
               <a
                 href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"
                 target="_blank"
@@ -48,15 +69,19 @@ search.addWidgets([
                 Vis rapport
               </a>
             </p>
-            <p>${hit.identicalLabelCount} identiske ledetekster</p>
-            <p>${hit.h3} H1</p>
-            <p>${hit.h4} H2</p>
-            <p>${hit.scLabelsWithHeadingCount} Label-seksjoner med overskriftsnivå</p>
-            <p>${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå</p>
-            <p>
-              ${hit.learningMaterials ? ` ${hit.learningMaterials.join(", ")} ` : null}
-              ${hit.subjects ? `${hit.subjects.join(", ")} ` : null} ${hit.grades ? `${hit.grades.join(", ")} ` : null}
+            <p class="${createHeaderCountPreview(hit).startsWith("H1") ? null : "red"}">
+              ${createHeaderCountPreview(hit)}
             </p>
+            <p class="${hit.identicalLabelCount ? null : "grey"}">${hit.identicalLabelCount} identiske ledetekster</p>
+            <p class="${hit.scLabelsWithHeadingCount ? null : "grey"}">
+              ${hit.scLabelsWithHeadingCount} Label-seksjoner med overskriftsnivå
+            </p>
+            <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
+              ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
+            </p>
+            <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer"
+              ><img class="redaptic-svg" src="/redaptic.svg"
+            /></a>
           </div>
         </article>
       `,
@@ -70,28 +95,53 @@ search.addWidgets([
   })(instantsearch.widgets.refinementList)({
     container: "#learning-materials",
     attribute: "learningMaterials",
+    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Fag" },
   })(instantsearch.widgets.refinementList)({
     container: "#subjects",
     attribute: "subjects",
+    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Trinn" },
   })(instantsearch.widgets.refinementList)({
     container: "#grades",
     attribute: "grades",
+    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
-    templates: { header: "Anmerkninger" },
+    templates: { header: "Anmerkninger i automatisk test" },
   })(instantsearch.widgets.refinementList)({
     container: "#audits",
     attribute: "lighthouseFailingAudits.title",
+    sortBy: ["name:asc"],
   }),
-  // instantsearch.widgets.pagination({
-  //   container: "#pagination",
-  // }),
+  instantsearch.widgets.panel({
+    templates: { header: "Identiske ledetekster" },
+  })(instantsearch.widgets.rangeSlider)({
+    container: "#identicalLabelCount",
+    attribute: "identicalLabelCount",
+    pips: false,
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Label-seksjoner med overskriftsnivå" },
+  })(instantsearch.widgets.rangeSlider)({
+    container: "#scLabelsWithHeadingCount",
+    attribute: "scLabelsWithHeadingCount",
+    pips: false,
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Expand-seksjoner med overskriftsnivå" },
+  })(instantsearch.widgets.rangeSlider)({
+    container: "#scExpandsWithHeadingCount",
+    attribute: "scExpandsWithHeadingCount",
+    pips: false,
+  }),
+  instantsearch.widgets.pagination({
+    container: "#pagination",
+  }),
 ]);
 
 search.start();
