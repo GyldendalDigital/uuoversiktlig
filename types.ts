@@ -6,7 +6,7 @@ export interface SearchRecord {
   // uiTestRecord
   title: string;
   totalElapsedMs: number;
-  hasIdentialLabels: boolean;
+  identicalLabelCount: number;
   lighthouseElapsedMs: number;
   lighthouseTotalScore: number;
   lighthouseFailingAudits: LighthouseAudit[];

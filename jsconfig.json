@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "lib": [
+      "ES2021",
+      "DOM"
+    ],
+    "module": "NodeNext",
+    "resolveJsonModule": true
+  }
+}

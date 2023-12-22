@@ -1,17 +1,14 @@
-import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import dotenv from "dotenv";
-dotenv.config();
+import { logger } from "./utils.js";
+
+const log = logger("Blob").log;
 
 if (!process.env.AZURE_STORAGE_CONNECTION_STRING) {
   throw Error("Azure Storage Connection string not found");
 }
 
-// TODO: replace with azure identity
-// Create the BlobServiceClient object with connection string
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  process.env.AZURE_STORAGE_CONNECTION_STRING
-);
+// TODO: replace with @azure/identity
+const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
 const containerName = "lighthousereports";
 
@@ -27,7 +24,7 @@ const createBlobUrl = (blobName) =>
  *
  * @param {string} id
  * @param {string} json
- * @returns {Promise<number>}
+ * @returns {Promise<string>}
  */
 const saveBlob = async (id, json) => {
   // Get a reference to a container
@@ -52,5 +49,3 @@ const saveBlob = async (id, json) => {
 };
 
 export { saveBlob };
-
-const log = (msg, ...rest) => console.debug(`[Blob] ${msg}`, ...rest);

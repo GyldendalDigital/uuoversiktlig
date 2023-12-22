@@ -4,10 +4,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "feed": "node documentFeeder.js"
   },
   "dependencies": {
     "@azure/identity": "^4.0.0",
+    "@azure/service-bus": "^7.9.3",
     "@azure/storage-blob": "^12.17.0",
     "algoliasearch": "^4.22.0",
     "ejs": "^3.1.9",

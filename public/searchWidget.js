@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* global instantsearch algoliasearch ALGOLIA_APP_ID ALGOLIA_INDEX_NAME ALGOLIA_API_KEY_FRONTEND */
 
 /** Query Algolia directly (exposes app id and read-only api key) */
@@ -19,18 +20,11 @@ search.addWidgets([
         <article>
           <h3>${hit.title}</h3>
           <p>${hit.url}</p>
-          <p>
-            Score:
-            ${hit.lighthouseTotalScore ? " " + (hit.lighthouseTotalScore * 100) : null}%
-          </p>
+          <p>Score: ${hit.lighthouseTotalScore ? " " + hit.lighthouseTotalScore * 100 : null}%</p>
           <p>Identiske ledetekster: ${hit.identicalLabelCount}</p>
           <p>
-            Tags:
-            ${hit.learningMaterials
-              ? ` ${hit.learningMaterials.join(", ")} `
-              : null}
-            ${hit.subjects ? `${hit.subjects.join(", ")} ` : null}
-            ${hit.grades ? `${hit.grades.join(", ")} ` : null}
+            Tags: ${hit.learningMaterials ? ` ${hit.learningMaterials.join(", ")} ` : null}
+            ${hit.subjects ? `${hit.subjects.join(", ")} ` : null} ${hit.grades ? `${hit.grades.join(", ")} ` : null}
           </p>
           <a
             href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"

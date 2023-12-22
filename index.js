@@ -1,13 +1,13 @@
 import express from "express";
 import ejs from "ejs";
-import { runLighthouse } from "./uu.js";
-import { saveBlob } from "./blobStorage.js";
-import { saveRecords, searchFacets, searchRecords } from "./searchClient.js";
+import { searchFacets, searchRecords } from "./searchClient.js";
+import { runUrl } from "./runUrl.js";
+import { subscribeToMessages } from "./serviceBus.js";
+import { logger } from "./utils.js";
 
 const Express = express;
 const router = Express.Router();
-
-const log = (msg, ...rest) => console.debug(`[Server] ${msg}`, ...rest);
+const log = logger("Server").log;
 
 router.get("/", async (req, res) => {
   res.render("search", {
@@ -32,22 +32,7 @@ router.post("/run", async (req, res) => {
     return;
   }
 
-  const url = (req.body.url || "https://www.google.com").replace(/\/$/, "");
-
-  const { lighthouseReport, ...uiTestRecord } = await runLighthouse(url);
-
-  const id = url.split("://")[1].replaceAll("/", "-");
-
-  const jsonUrl = await saveBlob(id, JSON.stringify(lighthouseReport));
-
-  const record = {
-    objectID: id,
-    url,
-    jsonUrl,
-    ...uiTestRecord,
-  };
-
-  await saveRecords([record]);
+  const record = await runUrl(req.body.url);
 
   res.send(record);
   res.end();
@@ -79,3 +64,5 @@ server.use(router);
 const port = process.env.PORT || 3000;
 server.listen(port);
 log("listening on http://localhost:" + port);
+
+subscribeToMessages();
