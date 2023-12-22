@@ -13,7 +13,7 @@ const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
 const queueName = process.env.AZURE_SERVICE_BUS_QUEUE_NAME;
 
-const messages = activityIds.map((id) => ({ body: "https://localhost:5000/preview-content/" + id }));
+const messages = activityIds.map((id) => ({ body: "https://stage.skolestudio.no/preview-content/" + id }));
 
 const chunkArray = (array, chunkSize) =>
   Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, index) =>

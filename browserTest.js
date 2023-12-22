@@ -83,6 +83,30 @@ const runBrowserTest = async (url) => {
     return identicalLabels.length;
   });
 
+  // fetch all h elements (sections in Skolestudio translates h1 to h3 and so on)
+  const hCount = await page.evaluate(() => {
+    const h3 = Array.from(document.querySelectorAll("h3"));
+    const h4 = Array.from(document.querySelectorAll("h4"));
+    const h5 = Array.from(document.querySelectorAll("h5"));
+    const h6 = Array.from(document.querySelectorAll("h6"));
+
+    return { h3: h3.length, h4: h4.length, h5: h5.length, h6: h6.length };
+  });
+
+  // check sc-labels with headings as children
+  const scLabelsWithHeadingCount = await page.evaluate(() => {
+    document.querySelectorAll(
+      "section[class^='sc-label'] h3, section[class^='sc-label'] h4, section[class^='sc-label'] h5, section[class^='sc-label'] h6"
+    ).length;
+  });
+
+  // check sc-expands with headings as children
+  const scExpandsWithHeadingCount = await page.evaluate(() => {
+    document.querySelectorAll(
+      "section[class^='sc-expand'] h3, section[class^='sc-expand'] h4, section[class^='sc-expand'] h5, section[class^='sc-expand'] h6"
+    ).length;
+  });
+
   const activityData = await page.evaluate(() => {
     // @ts-ignore
     const activity = window.initialState?.activity;
@@ -130,6 +154,9 @@ const runBrowserTest = async (url) => {
     lighthouseFailingAudits,
 
     identicalLabelCount,
+    ...hCount,
+    scLabelsWithHeadingCount,
+    scExpandsWithHeadingCount,
   };
 
   log(JSON.stringify({ ...uiTestRecord, lighthouseReport: null }, null, 2));
