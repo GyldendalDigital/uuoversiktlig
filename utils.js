@@ -8,4 +8,4 @@ export const logger = (/** @type {string} */ namespace) => ({
 const logFromNamespace =
   (/** @type {string} */ namespace) =>
   (msg, ...rest) =>
-    true ? console.debug(`[${namespace}] ${msg}`, ...rest) : null;
+    process.env.DEBUG === "true" ? console.debug(`[${namespace}] ${msg}`, ...rest) : null;

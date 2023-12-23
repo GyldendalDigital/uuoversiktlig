@@ -31,134 +31,142 @@ const runBrowserTest = async (url) => {
 
   const page = await browser.newPage();
 
-  // set secret cookie if preview endpoint
-  if (url.includes("/preview-content/")) {
-    log("setting secret cookie");
-    await page.setCookie({
-      name: "PreviewContentCookieSecret",
-      value: process.env.PREVIEW_COOKIE_SECRET,
-      domain: new URL(url).hostname,
-      path: "/",
-    });
-  }
+  try {
+    // set secret cookie if preview endpoint
+    if (url.includes("/preview-content/")) {
+      log("setting secret cookie");
+      await page.setCookie({
+        name: "PreviewContentCookieSecret",
+        value: process.env.PREVIEW_COOKIE_SECRET,
+        domain: new URL(url).hostname,
+        path: "/",
+      });
+    }
 
-  log("lighthouse start", url);
+    log("lighthouse start", url);
 
-  const result = await lighthouse(url, undefined, lighthouseOptions, page);
+    const result = await lighthouse(url, undefined, lighthouseOptions, page);
 
-  if (result.lhr.runtimeError) {
-    log("lighthouse error", url);
-    throw new Error(
-      JSON.stringify({
-        url,
-        totalElapsedMs: Date.now() - start,
-        error: result.lhr.runtimeError,
-      })
+    if (result.lhr.runtimeError) {
+      log("lighthouse error", url);
+      throw new Error(
+        JSON.stringify({
+          url,
+          totalElapsedMs: Date.now() - start,
+          error: result.lhr.runtimeError,
+        })
+      );
+    }
+
+    log("lighthouse end", url);
+
+    const lighthouseReport = result.lhr;
+    const lighthouseElapsedMs = result.lhr.timing.total;
+    const lighthouseTotalScore = result.lhr.categories.accessibility.score;
+    const lighthouseFailingAudits = objectMap(result.lhr.audits, toSimpleAudit).filter(
+      (a) => a.score !== null && a.score !== 1
     );
-  }
 
-  log("lighthouse end", url);
+    /// OTHER TESTS
+    log("other start", url);
 
-  const lighthouseReport = result.lhr;
-  const lighthouseElapsedMs = result.lhr.timing.total;
-  const lighthouseTotalScore = result.lhr.categories.accessibility.score;
-  const lighthouseFailingAudits = objectMap(result.lhr.audits, toSimpleAudit).filter(
-    (a) => a.score !== null && a.score !== 1
-  );
+    // check all input fields for identical aria-label:
+    const identicalLabelCount = await page.evaluate(() => {
+      const inputFields = Array.from(document.querySelectorAll("input"));
 
-  /// OTHER TESTS
-  log("other start", url);
+      const ariaLabels = inputFields.map((input) => {
+        const label = input.getAttribute("aria-label");
+        return label === null ? null : label.trim();
+      });
 
-  // check all input fields for identical aria-label:
-  const identicalLabelCount = await page.evaluate(() => {
-    const inputFields = Array.from(document.querySelectorAll("input"));
+      const identicalLabels = ariaLabels.filter((label, index, labels) => labels.indexOf(label) !== index);
 
-    const ariaLabels = inputFields.map((input) => {
-      const label = input.getAttribute("aria-label");
-      return label === null ? null : label.trim();
+      return identicalLabels.length;
     });
 
-    const identicalLabels = ariaLabels.filter((label, index, labels) => labels.indexOf(label) !== index);
+    // fetch all h elements (sections in Skolestudio translates h1 to h3 and so on)
+    const hCount = await page.evaluate(() =>
+      ["h3", "h4", "h5", "h6"].reduce((a, v) => ({ ...a, [v + "Count"]: document.querySelectorAll(v).length }), {})
+    );
 
-    return identicalLabels.length;
-  });
+    // check sc-labels with headings as children
+    const scLabelsWithHeadingCount = await page.evaluate(
+      () =>
+        document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-label'] ${h}`).join(", "))
+          .length
+    );
 
-  // fetch all h elements (sections in Skolestudio translates h1 to h3 and so on)
-  const hCount = await page.evaluate(() =>
-    ["h3", "h4", "h5", "h6"].reduce((a, v) => ({ ...a, [v + "Count"]: document.querySelectorAll(v).length }), {})
-  );
+    // check sc-expands with headings as children
+    const scExpandsWithHeadingCount = await page.evaluate(
+      () =>
+        document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-expand'] ${h}`).join(", "))
+          .length
+    );
 
-  // check sc-labels with headings as children
-  const scLabelsWithHeadingCount = await page.evaluate(
-    () =>
-      document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-label'] ${h}`).join(", "))
-        .length
-  );
+    const activityData = await page.evaluate(() => {
+      // @ts-ignore
+      const activity = window.initialState?.activity;
+      if (activity) {
+        const getActivityThumbnail = (activity) => {
+          const damImage =
+            activity.thumbnailDetails ??
+            activity.backgroundImageDetails ??
+            (activity.scenes ? activity.scenes[0]?.backgroundImageDetails : null);
 
-  // check sc-expands with headings as children
-  const scExpandsWithHeadingCount = await page.evaluate(
-    () =>
-      document.querySelectorAll(["h3", "h4", "h5", "h6"].map((h) => `section[class^='sc-expand'] ${h}`).join(", "))
-        .length
-  );
-
-  const activityData = await page.evaluate(() => {
-    // @ts-ignore
-    const activity = window.initialState?.activity;
-    if (activity) {
-      const getActivityThumbnail = (activity) => {
-        const damImage =
-          activity.thumbnailDetails ??
-          activity.backgroundImageDetails ??
-          (activity.scenes ? activity.scenes[0]?.backgroundImageDetails : null);
+          return {
+            id: damImage?.id,
+            mimeType: damImage?.mimeType,
+          };
+        };
 
         return {
-          id: damImage?.id,
-          mimeType: damImage?.mimeType,
+          learningMaterials: activity.learningMaterials,
+          learningComponents: activity.learningComponents,
+          subjects: activity.subjects,
+          grades: activity.grades,
+          differentiations: activity.differentiations,
+          interdisciplinaryTopics: activity.interdisciplinaryTopics,
+          topics: activity.topics,
+
+          studentVisible: activity.studentVisible,
+          thumbnail: getActivityThumbnail(activity),
         };
-      };
+      }
+    });
 
-      return {
-        learningMaterials: activity.learningMaterials,
-        learningComponents: activity.learningComponents,
-        subjects: activity.subjects,
-        grades: activity.grades,
-        differentiations: activity.differentiations,
-        interdisciplinaryTopics: activity.interdisciplinaryTopics,
-        topics: activity.topics,
+    log("other end", url);
 
-        studentVisible: activity.studentVisible,
-        thumbnail: getActivityThumbnail(activity),
-      };
-    }
-  });
+    const title = await page.title();
 
-  log("other end", url);
+    /// CLEANUP AND RETURN
 
-  const title = await page.title();
+    await page.close();
+    await browser.close();
 
-  /// CLEANUP AND RETURN
+    const uiTestRecord = {
+      ...activityData,
+      title,
+      totalElapsedMs: Date.now() - start,
+      url,
 
-  await browser.close();
+      lighthouseReport,
+      lighthouseElapsedMs,
+      lighthouseTotalScore,
+      lighthouseFailingAudits,
 
-  const uiTestRecord = {
-    ...activityData,
-    title,
-    totalElapsedMs: Date.now() - start,
-    url,
+      identicalLabelCount,
+      ...hCount,
+      scLabelsWithHeadingCount,
+      scExpandsWithHeadingCount,
+    };
 
-    lighthouseReport,
-    lighthouseElapsedMs,
-    lighthouseTotalScore,
-    lighthouseFailingAudits,
-
-    identicalLabelCount,
-    ...hCount,
-    scLabelsWithHeadingCount,
-    scExpandsWithHeadingCount,
-  };
-
-  return uiTestRecord;
+    return uiTestRecord;
+  } catch (error) {
+    log(error);
+  } finally {
+    await page.close();
+    await browser.close();
+  }
 };
 
 export { runBrowserTest };
