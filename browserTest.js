@@ -27,6 +27,7 @@ const runBrowserTest = async (url) => {
   /// PAGE SETUP
   const browser = await launch({
     headless: "new",
+    args: ["--no-sandbox"],
   });
 
   const page = await browser.newPage();
@@ -138,10 +139,7 @@ const runBrowserTest = async (url) => {
 
     const title = await page.title();
 
-    /// CLEANUP AND RETURN
-
-    await page.close();
-    await browser.close();
+    /// RETURN
 
     const uiTestRecord = {
       ...activityData,
@@ -162,10 +160,13 @@ const runBrowserTest = async (url) => {
 
     return uiTestRecord;
   } catch (error) {
-    log(error);
+    log("caught error", error);
   } finally {
+    log("cleaning up");
     await page.close();
+    log("page", page.isClosed());
     await browser.close();
+    log("browser", !browser.connected);
   }
 };
 
