@@ -41,6 +41,13 @@ const createHeaderCountPreview = (hit) => {
   return headers.join(" ");
 };
 
+const defaultFilterOptions = {
+  limit: 100,
+  showMore: true,
+  showMoreLimit: 200,
+  sortBy: (a, b) => (a.name.localeCompare(b.name) ? 1 : -1),
+};
+
 search.addWidgets([
   instantsearch.widgets.searchBox({
     container: "#searchbox",
@@ -93,30 +100,30 @@ search.addWidgets([
   instantsearch.widgets.panel({
     templates: { header: "Verk" },
   })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
     container: "#learning-materials",
     attribute: "learningMaterials",
-    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Fag" },
   })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
     container: "#subjects",
     attribute: "subjects",
-    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Trinn" },
   })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
     container: "#grades",
     attribute: "grades",
-    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Anmerkninger i automatisk test" },
   })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
     container: "#audits",
     attribute: "lighthouseFailingAudits.title",
-    sortBy: ["name:asc"],
   }),
   instantsearch.widgets.panel({
     templates: { header: "Identiske ledetekster" },
