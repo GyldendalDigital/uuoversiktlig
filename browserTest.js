@@ -44,7 +44,17 @@ const runBrowserTest = async (url) => {
       });
     }
 
-    log("lighthouse start", url);
+    log("ping url");
+
+    const ping = await page.goto(url, { waitUntil: "networkidle0" });
+    const status = ping.status();
+    if (status < 200 || status >= 400) {
+      throw new Error(ping.statusText() || `Ping failed with status ${status}`);
+    } else {
+      log("ping", status);
+    }
+
+    log("lighthouse start");
 
     const result = await lighthouse(url, undefined, lighthouseOptions, page);
 
@@ -160,7 +170,8 @@ const runBrowserTest = async (url) => {
 
     return uiTestRecord;
   } catch (error) {
-    log("caught error", error);
+    log("caught error", error.message);
+    throw error;
   } finally {
     log("cleaning up");
     await page.close();
