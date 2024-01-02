@@ -126,6 +126,20 @@ search.addWidgets([
     attribute: "lighthouseFailingAudits.title",
   }),
   instantsearch.widgets.panel({
+    templates: { header: "Score i automatisk test" },
+  })(instantsearch.widgets.numericMenu)({
+    ...defaultFilterOptions,
+    container: "#score",
+    attribute: "lighthouseTotalScore",
+    items: [
+      { label: "Alle" },
+      { label: "100%", start: 1 },
+      { label: "Helt greit", start: 0.9, end: 0.99 },
+      { label: "Ikke bra", start: 0.7, end: 0.89 },
+      { label: "Krise", end: 0.69 },
+    ],
+  }),
+  instantsearch.widgets.panel({
     templates: { header: "Identiske ledetekster" },
   })(instantsearch.widgets.rangeSlider)({
     container: "#identicalLabelCount",
