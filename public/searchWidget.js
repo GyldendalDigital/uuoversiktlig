@@ -42,7 +42,7 @@ const createHeaderCountPreview = (hit) => {
 };
 
 const defaultFilterOptions = {
-  limit: 100,
+  limit: 5,
   showMore: true,
   showMoreLimit: 200,
   sortBy: (a, b) => (a.name.localeCompare(b.name) ? 1 : -1),
@@ -86,9 +86,9 @@ search.addWidgets([
             <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
               ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
             </p>
-            <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer"
-              ><img class="redaptic-svg" src="/redaptic.svg"
-            /></a>
+            <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
+              <img class="redaptic-svg" src="/redaptic.svg" />
+            </a>
           </div>
         </article>
       `,
@@ -138,6 +138,25 @@ search.addWidgets([
       { label: "Ikke bra", start: 0.7, end: 0.89 },
       { label: "Krise", end: 0.69 },
     ],
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        count: item.isRefined && results ? results.nbHits : 0,
+      })),
+    templates: {
+      item(data, { html }) {
+        return html` <label class="${data.cssClasses.label}">
+          <input
+            type="radio"
+            class="${data.cssClasses.radio}"
+            name="${data.attribute}"
+            checked="${data.isRefined ? "checked" : ""}"
+          />
+          <span class="${data.cssClasses.labelText}"> ${data.label} </span>
+          <span class="${data.count ? "ais-RefinementList-count" : null}">${data.count ? `${data.count}` : null}</span>
+        </label>`;
+      },
+    },
   }),
   instantsearch.widgets.panel({
     templates: { header: "Identiske ledetekster" },
@@ -160,8 +179,61 @@ search.addWidgets([
     attribute: "scExpandsWithHeadingCount",
     pips: false,
   }),
+  instantsearch.widgets.panel({
+    templates: { header: "Brukte seksjoner" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#sectionElementTags",
+    attribute: "sectionElementTags",
+  }),
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#isMissingTitle",
+    attribute: "isMissingTitle",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Mangler tittel <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Aktivitetsmodus" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#mode",
+    attribute: "mode",
+    transformItems(items) {
+      return items.map((item) => {
+        const label =
+          item.label === "0"
+            ? "Steps"
+            : item.label === "1"
+            ? "Scroll"
+            : item.label === "2"
+            ? "SlideshowHorizontal"
+            : "SlideshowVertical";
+        return {
+          ...item,
+          label,
+          highlighted: label,
+        };
+      });
+    },
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Antall scener" },
+  })(instantsearch.widgets.rangeSlider)({
+    container: "#sceneCount",
+    attribute: "sceneCount",
+    pips: false,
+  }),
   instantsearch.widgets.pagination({
     container: "#pagination",
+    showFirst: false,
+    showPrevious: false,
+    showNext: false,
+    showLast: false,
   }),
 ]);
 

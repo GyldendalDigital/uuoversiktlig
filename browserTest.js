@@ -116,7 +116,8 @@ const runBrowserTest = async (url) => {
 
     const activityData = await page.evaluate(() => {
       // @ts-ignore
-      const activity = window.initialState?.activity;
+      const initialState = window.initialState;
+      const activity = initialState?.activity;
       if (activity) {
         const getActivityThumbnail = (activity) => {
           const damImage =
@@ -141,6 +142,10 @@ const runBrowserTest = async (url) => {
 
           studentVisible: activity.studentVisible,
           thumbnail: getActivityThumbnail(activity),
+          mode: initialState?.originalActivityMode,
+          sceneCount: activity.scenes?.length || 0,
+          sectionElementTags: initialState?.sectionElementTags,
+          isMissingTitle: !activity.title?.value,
         };
       }
     });
