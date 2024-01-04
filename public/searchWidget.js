@@ -7,6 +7,7 @@ const defaultClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY_FRONTEND);
 const search = instantsearch({
   indexName: ALGOLIA_INDEX_NAME,
   searchClient: defaultClient,
+  routing: true,
 });
 
 const createDamUrl = (thumbnail) => {
@@ -103,9 +104,18 @@ search.addWidgets([
       `,
     },
   }),
-  // instantsearch.widgets.configure({
-  //   hitsPerPage: 8,
-  // }),
+  instantsearch.widgets.pagination({
+    container: "#pagination",
+    showFirst: false,
+    showPrevious: false,
+    showNext: false,
+    showLast: false,
+  }),
+
+  /// FILTERS
+
+  // TAGS
+
   instantsearch.widgets.panel({
     templates: { header: "Verk" },
   })(instantsearch.widgets.refinementList)({
@@ -127,6 +137,64 @@ search.addWidgets([
     container: "#grades",
     attribute: "grades",
   }),
+
+  // HEADING COUNT
+
+  instantsearch.widgets.refinementList({
+    ...defaultFilterOptions,
+    container: "#h3Count",
+    attribute: "h3Count",
+    limit: 1,
+    showMore: false,
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        highlighted: `Uten H1`,
+        label: `Uten H1`,
+      })),
+  }),
+  instantsearch.widgets.refinementList({
+    ...defaultFilterOptions,
+    container: "#h4Count",
+    attribute: "h4Count",
+    limit: 1,
+    showMore: false,
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        highlighted: `Uten H2`,
+        label: `Uten H2`,
+      })),
+  }),
+  instantsearch.widgets.refinementList({
+    ...defaultFilterOptions,
+    container: "#h5Count",
+    attribute: "h5Count",
+    limit: 1,
+    showMore: false,
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        highlighted: `Uten H3`,
+        label: `Uten H3`,
+      })),
+  }),
+  instantsearch.widgets.refinementList({
+    ...defaultFilterOptions,
+    container: "#h6Count",
+    attribute: "h6Count",
+    limit: 1,
+    showMore: false,
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        highlighted: `Uten H4`,
+        label: `Uten H4`,
+      })),
+  }),
+
+  // OTHER
+  
   instantsearch.widgets.panel({
     templates: { header: "Anmerkninger i automatisk test" },
   })(instantsearch.widgets.refinementList)({
@@ -236,13 +304,6 @@ search.addWidgets([
     container: "#sceneCount",
     attribute: "sceneCount",
     pips: false,
-  }),
-  instantsearch.widgets.pagination({
-    container: "#pagination",
-    showFirst: false,
-    showPrevious: false,
-    showNext: false,
-    showLast: false,
   }),
 ]);
 
