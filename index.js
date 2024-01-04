@@ -23,6 +23,7 @@ router.get("/test", async (req, res) => {
   res.render("manual-url-test", {
     title: "uuoversiktlig",
     subtitle: "Sjekk (u)utilgjengeligheten på en side",
+    url: req.query.url,
   });
 });
 

@@ -32,6 +32,12 @@ const createRedapticUrl = (originalUrl) => {
   return "https://redaptic.gyldendaldigital.no/" + contentId;
 };
 
+const createRetestUrl = (originalUrl) => {
+  if (!originalUrl) return "";
+
+  return "/test?url=" + encodeURIComponent(originalUrl);
+};
+
 const createHeaderCountPreview = (hit) => {
   const headers = [];
   if (!!hit["h3Count"]) headers.push("H1");
@@ -86,6 +92,9 @@ search.addWidgets([
             <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
               ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
             </p>
+            <a class="retest-link" href="${createRetestUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
+              Test på nytt
+            </a>
             <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
               <img class="redaptic-svg" src="/redaptic.svg" />
             </a>
