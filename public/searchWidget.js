@@ -194,7 +194,7 @@ search.addWidgets([
   }),
 
   // OTHER
-  
+
   instantsearch.widgets.panel({
     templates: { header: "Anmerkninger i automatisk test" },
   })(instantsearch.widgets.refinementList)({
@@ -211,9 +211,7 @@ search.addWidgets([
     items: [
       { label: "Alle" },
       { label: "100%", start: 1 },
-      { label: "Helt greit", start: 0.9, end: 0.99 },
-      { label: "Ikke bra", start: 0.7, end: 0.89 },
-      { label: "Krise", end: 0.69 },
+      { label: "Under 100%", end: 0.99 },
     ],
     transformItems: (items, { results }) =>
       items.map((item) => ({
