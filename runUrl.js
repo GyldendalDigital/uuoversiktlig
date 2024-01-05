@@ -5,33 +5,30 @@ import { logger } from "./utils.js";
 
 const log = logger("Runner").log;
 
+/** Browser test a web page, save the report in blob storage, and index the metadata in Algolia */
 export const runUrl = async (/** @type {string} */ inputUrl) => {
-  if (!inputUrl || !inputUrl.includes("://")) {
-    log("Invalid URL", inputUrl);
-    throw Error("Invalid URL");
-  }
+  const url = new URL(inputUrl);
+  const hostname = url.hostname;
+  // remove trailing slash and replace remaining slashes with dash
+  const id = hostname + url.pathname.replace(/\/$/, "").replaceAll("/", "-");
 
-  log("start", inputUrl);
+  log("start", id);
 
-  // remove trailing slash
-  const url = inputUrl.replace(/\/$/, "");
-
-  const { lighthouseReport, ...uiTestRecord } = await runBrowserTest(url);
-
-  const id = url.split("://")[1].replaceAll("/", "-");
+  const { lighthouseReport, ...uiTestRecord } = await runBrowserTest(url.href);
 
   const jsonUrl = await saveBlob(id, JSON.stringify(lighthouseReport));
 
   const record = {
     objectID: id,
-    url,
+    url: url.href,
+    hostname,
     jsonUrl,
     ...uiTestRecord,
   };
 
   await saveRecords([record]);
 
-  log("end", inputUrl);
+  log("end", id);
 
   return record;
 };

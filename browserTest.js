@@ -142,10 +142,11 @@ const runBrowserTest = async (url) => {
 
           studentVisible: activity.studentVisible,
           thumbnail: getActivityThumbnail(activity),
-          mode: initialState?.originalActivityMode,
+          mode: initialState.originalActivityMode,
           sceneCount: activity.scenes?.length || 0,
-          sectionElementTags: initialState?.sectionElementTags,
+          sectionElementTags: initialState.sectionElementTags,
           isMissingTitle: !activity.title?.value,
+          parentDocumentTypes: initialState.parentDocumentTypes,
         };
       }
     });
