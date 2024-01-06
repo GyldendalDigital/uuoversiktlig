@@ -2,6 +2,7 @@ import { launch } from "puppeteer";
 import lighthouse from "lighthouse";
 import { userAgents, screenEmulationMetrics } from "lighthouse/core/config/constants.js";
 import { logger } from "./utils.js";
+import { francAll } from "franc";
 
 const log = logger("BrowserTest").log;
 
@@ -56,7 +57,7 @@ const runBrowserTest = async (url) => {
 
     log("lighthouse start");
 
-    const result = await lighthouse(url, undefined, lighthouseOptions, page);
+    const result = await lighthouse(url, undefined, lighthouseOptions, page); // { lhr: { timing: {}, categories: { accessibility: {} }, audits: {} } };
 
     if (result.lhr.runtimeError) {
       log("lighthouse error", url);
@@ -69,7 +70,7 @@ const runBrowserTest = async (url) => {
       );
     }
 
-    log("lighthouse end", url);
+    log("lighthouse end");
 
     const lighthouseReport = result.lhr;
     const lighthouseElapsedMs = result.lhr.timing.total;
@@ -79,7 +80,7 @@ const runBrowserTest = async (url) => {
     );
 
     /// OTHER TESTS
-    log("other start", url);
+    log("other start");
 
     // check all input fields for identical aria-label:
     const identicalLabelCount = await page.evaluate(() => {
@@ -151,7 +152,9 @@ const runBrowserTest = async (url) => {
       }
     });
 
-    log("other end", url);
+    const langTest = await languageTest(page, activityData?.subjects ?? []);
+
+    log("other end", langTest);
 
     const title = await page.title();
 
@@ -172,6 +175,9 @@ const runBrowserTest = async (url) => {
       ...hCount,
       scLabelsWithHeadingCount,
       scExpandsWithHeadingCount,
+      isForeignLanguageWithoutLangAttributes: langTest.hasForeignLanguage && !langTest.hasInnerLangAttributes,
+      hasIncorrectLanguageTexts: langTest.incorrectLanguageTexts.length > 0,
+      incorrectLanguageTexts: langTest.incorrectLanguageTexts,
     };
 
     return uiTestRecord;
@@ -197,3 +203,81 @@ export { runBrowserTest };
 const toSimpleAudit = (a) => ({ id: a.id, title: a.title, score: a.score });
 
 const objectMap = (obj, fn) => Object.entries(obj).map(([k, v], i) => fn(v, k, i));
+
+const languageTest = async (page, activitySubjects) => {
+  // retrieve all section texts
+  const minimumTextLengthForDetection = 3;
+  const maxScoreForSecond = 0.75;
+  const sectionTest = await page.evaluate(() => {
+    const minimumTextLengthForDetection = 3;
+    const texts = [];
+    let hasInnerLangAttributes = false;
+    document.querySelectorAll("div[class^='SectionFocusContainer'][lang]").forEach(
+      /** @param {HTMLDivElement} el */ (el) => {
+        if (!el.innerText || el.innerText.length < minimumTextLengthForDetection) return;
+
+        // probably already language tagged, skip. Also franc performs poorly on short texts
+        const subElementsWithLang = el.querySelectorAll("[lang]");
+        if (subElementsWithLang.length > 0) {
+          hasInnerLangAttributes = true;
+          return;
+        }
+
+        texts.push({ lang: el.lang, text: el.innerText.replaceAll("\n", " ") });
+      }
+    );
+    return { texts, hasInnerLangAttributes };
+  });
+
+  const mapToFrancLanguageCodes = (langCodes) => {
+    const francLanguageCodes = langCodes.map((code) => {
+      if (code.includes("nn")) return "nno";
+      if (code.includes("nb")) return "nob";
+      if (code.includes("en")) return "eng";
+      if (code.includes("de")) return "deu";
+      if (code.includes("fr")) return "fra";
+      if (code.includes("es")) return "spa";
+      return "und";
+    });
+    return francLanguageCodes;
+  };
+
+  const possibleLanguages = mapToFrancLanguageCodes(sectionTest.texts.map((t) => t.lang).filter((lang) => lang));
+
+  if (activitySubjects.includes("engelsk")) possibleLanguages.push("eng");
+  if (activitySubjects.includes("fransk")) possibleLanguages.push("fra");
+  if (activitySubjects.includes("tysk")) possibleLanguages.push("deu");
+  if (activitySubjects.includes("spansk")) possibleLanguages.push("spa");
+
+  const only = [...new Set(possibleLanguages)];
+
+  const hasForeignLanguage =
+    only.includes("eng") || only.includes("fra") || only.includes("deu") || only.includes("spa");
+
+  log("only languages", only);
+
+  // detect language section texts
+  const incorrectLanguageTexts = sectionTest.texts
+    .map((t) => {
+      const francLangs = mapToFrancLanguageCodes([t.lang]);
+      const mostProbableLangs = francAll(t.text, {
+        only,
+        minLength: minimumTextLengthForDetection,
+      });
+
+      return {
+        lang: t.lang,
+        francLang: francLangs[0],
+        mostProbableLang: mostProbableLangs[0],
+        secondMostProbableLang: mostProbableLangs[1],
+        text: t.text.slice(0, 20),
+      };
+    })
+    .filter((x) => x.mostProbableLang[0] !== "und") // undetermined
+    .filter((x) => x.mostProbableLang[0] !== x.francLang)
+    .filter((x) => x.secondMostProbableLang[1] <= maxScoreForSecond)
+    // .map((x) => `[lang=${x.lang}] [franc=${x.mostProbableLang},${x.secondMostProbableLang}] ${x.text}`)
+    .map((x) => ({ lang: x.lang, mostProbableLang: x.mostProbableLang[0], text: x.text }));
+
+  return { hasForeignLanguage, hasInnerLangAttributes: sectionTest.hasInnerLangAttributes, incorrectLanguageTexts };
+};
