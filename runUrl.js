@@ -23,6 +23,7 @@ export const runUrl = async (/** @type {string} */ inputUrl) => {
     url: url.href,
     hostname,
     jsonUrl,
+    savedAt: new Date().toISOString(),
     ...uiTestRecord,
   };
 

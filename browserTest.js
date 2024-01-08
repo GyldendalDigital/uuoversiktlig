@@ -57,7 +57,8 @@ const runBrowserTest = async (url) => {
 
     log("lighthouse start");
 
-    const result = await lighthouse(url, undefined, lighthouseOptions, page); // { lhr: { timing: {}, categories: { accessibility: {} }, audits: {} } };
+    const result = await lighthouse(url, undefined, lighthouseOptions, page);
+    // const result = { lhr: { timing: {}, categories: { accessibility: {} }, audits: {} } };
 
     if (result.lhr.runtimeError) {
       log("lighthouse error", url);
@@ -212,7 +213,7 @@ const languageTest = async (page, activitySubjects) => {
     const minimumTextLengthForDetection = 3;
     const texts = [];
     let hasInnerLangAttributes = false;
-    document.querySelectorAll("div[class^='SectionFocusContainer'][lang]").forEach(
+    document.querySelectorAll("div[class^='SectionFocusContainer'][lang],div[class^='sc-'][lang]").forEach(
       /** @param {HTMLDivElement} el */ (el) => {
         if (!el.innerText || el.innerText.length < minimumTextLengthForDetection) return;
 
@@ -221,6 +222,14 @@ const languageTest = async (page, activitySubjects) => {
         if (subElementsWithLang.length > 0) {
           hasInnerLangAttributes = true;
           return;
+        }
+
+        // retrieve alt text from images
+        const subElementsWithAltText = el.querySelectorAll("[alt]");
+        if (subElementsWithAltText.length > 0) {
+          subElementsWithAltText.forEach((elWithAlt) => {
+            texts.push({ lang: el.lang, text: elWithAlt.getAttribute("alt") });
+          });
         }
 
         texts.push({ lang: el.lang, text: el.innerText.replaceAll("\n", " ") });
@@ -251,8 +260,7 @@ const languageTest = async (page, activitySubjects) => {
 
   const only = [...new Set(possibleLanguages)];
 
-  const hasForeignLanguage =
-    only.includes("eng") || only.includes("fra") || only.includes("deu") || only.includes("spa");
+  const hasForeignLanguage = only.includes("fra") || only.includes("deu") || only.includes("spa");
 
   log("only languages", only);
 
@@ -265,18 +273,19 @@ const languageTest = async (page, activitySubjects) => {
         minLength: minimumTextLengthForDetection,
       });
 
+      // log(`[lang=${t.lang}] [franc=${mostProbableLangs}] ${t.text.slice(0, 50) + (t.text.length > 50 ? "..." : "")}`);
+
       return {
         lang: t.lang,
         francLang: francLangs[0],
         mostProbableLang: mostProbableLangs[0],
         secondMostProbableLang: mostProbableLangs[1],
-        text: t.text.slice(0, 20),
+        text: t.text.slice(0, 50) + (t.text.length > 50 ? "..." : ""),
       };
     })
     .filter((x) => x.mostProbableLang[0] !== "und") // undetermined
     .filter((x) => x.mostProbableLang[0] !== x.francLang)
     .filter((x) => x.secondMostProbableLang[1] <= maxScoreForSecond)
-    // .map((x) => `[lang=${x.lang}] [franc=${x.mostProbableLang},${x.secondMostProbableLang}] ${x.text}`)
     .map((x) => ({ lang: x.lang, mostProbableLang: x.mostProbableLang[0], text: x.text }));
 
   return { hasForeignLanguage, hasInnerLangAttributes: sectionTest.hasInnerLangAttributes, incorrectLanguageTexts };

@@ -35,6 +35,10 @@ iframe {
   height: 75vh;
 }
 
+details {
+  cursor: pointer;
+}
+
 /* Algolia */
 
 .container {

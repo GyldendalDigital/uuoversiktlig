@@ -84,15 +84,22 @@ search.addWidgets([
               </a>
             </p>
             <p class="${createHeaderCountPreview(hit).startsWith("H1") ? null : "red"}">
-              ${createHeaderCountPreview(hit)}
+              Overskriftsnivåer: ${createHeaderCountPreview(hit)}
             </p>
-            <p class="${hit.identicalLabelCount ? null : "grey"}">${hit.identicalLabelCount} identiske ledetekster</p>
-            <p class="${hit.scLabelsWithHeadingCount ? null : "grey"}">
-              ${hit.scLabelsWithHeadingCount} Label-seksjoner med overskriftsnivå
-            </p>
-            <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
-              ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
-            </p>
+
+            <details>
+              <p class="${hit.identicalLabelCount ? null : "grey"}">${hit.identicalLabelCount} identiske ledetekster</p>
+              <p class="${hit.scLabelsWithHeadingCount ? null : "grey"}">
+                ${hit.scLabelsWithHeadingCount} Label-seksjoner med overskriftsnivå
+              </p>
+              <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
+                ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
+              </p>
+              <pre>${hit.incorrectLanguageTexts ? JSON.stringify(hit.incorrectLanguageTexts, null, 2) : null}</pre>
+              <p>${hit.savedAt ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}` : null}</p>
+            </details>
+            <br />
+
             <a class="retest-link" href="${createRetestUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
               Test på nytt
             </a>
@@ -208,11 +215,7 @@ search.addWidgets([
     ...defaultFilterOptions,
     container: "#score",
     attribute: "lighthouseTotalScore",
-    items: [
-      { label: "Alle" },
-      { label: "100%", start: 1 },
-      { label: "Under 100%", end: 0.99 },
-    ],
+    items: [{ label: "Alle" }, { label: "100%", start: 1 }, { label: "Under 100%", end: 0.99 }],
     transformItems: (items, { results }) =>
       items.map((item) => ({
         ...item,
@@ -302,6 +305,37 @@ search.addWidgets([
     container: "#sceneCount",
     attribute: "sceneCount",
     pips: false,
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Brukt i" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#parentDocumentTypes",
+    attribute: "parentDocumentTypes",
+  }),
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#isForeignLanguageWithoutLangAttributes",
+    attribute: "isForeignLanguageWithoutLangAttributes",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Fremmedspråk uten språkmarkering
+          <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
+  }),
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#hasIncorrectLanguageTexts",
+    attribute: "hasIncorrectLanguageTexts",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Muligens feil språkmarkering
+          <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
   }),
 ]);
 

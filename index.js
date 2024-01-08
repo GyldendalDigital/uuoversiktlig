@@ -12,7 +12,7 @@ const log = logger("Server").log;
 router.get("/", async (req, res) => {
   res.render("search", {
     title: "uuoversiktlig",
-    subtitle: "Let fram (u)utilgjengelige sider",
+    subtitle: "Automatisk testing av publiserte aktiviteter i Redaptic.",
     ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
     ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
     ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
