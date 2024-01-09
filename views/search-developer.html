@@ -11,30 +11,16 @@
       <div class="container">
         <div class="search-panel">
           <div class="search-panel__filters">
-            <div class="ais-Panel-header"><span>Overskriftsnivå</span></div>
-            <div id="h3Count"></div>
-            <div id="h4Count"></div>
-            <div id="h5Count"></div>
-            <div id="h6Count"></div>
-            <br />
-            <div id="scLabelsWithHeadingCount"></div>
-            <div id="scExpandsWithHeadingCount"></div>
-            <div id="identicalLabelCount"></div>
-            <div id="sceneCount"></div>
-
-            <div class="ais-Panel-header"><span>Språk</span></div>
-            <div id="isForeignLanguageWithoutLangAttributes"></div>
-            <div id="hasIncorrectLanguageTexts"></div>
-            <br />
-
+            <div id="score"></div>
+            <div id="audits"></div>
+            <div id="sectionElementTags"></div>
+            <div id="mode"></div>
+            <div id="parentDocumentTypes"></div>
+            <div id="hostname"></div>
             <div id="learning-materials"></div>
             <div id="learning-components"></div>
             <div id="subjects"></div>
             <div id="grades"></div>
-
-            <div class="ais-Panel-header"><span>Rusk</span></div>
-            <div id="isMissingTitle"></div>
-            <br />
           </div>
 
           <div class="search-panel__results">
@@ -54,7 +40,7 @@
   <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.22.0/dist/algoliasearch.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.63.0/dist/instantsearch.production.min.js"></script>
   <script type="module">
-    import { search } from "./searchWidget.js";
-    search().start();
+    import { searchDeveloper } from "./searchWidget.js";
+    searchDeveloper().start();
   </script>
 </html>

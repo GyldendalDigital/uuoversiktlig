@@ -4,12 +4,6 @@
 /** Query Algolia directly (exposes app id and read-only api key) */
 const defaultClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY_FRONTEND);
 
-const search = instantsearch({
-  indexName: ALGOLIA_INDEX_NAME,
-  searchClient: defaultClient,
-  routing: true,
-});
-
 const createDamUrl = (thumbnail) => {
   if (!thumbnail?.id) return null;
 
@@ -48,17 +42,40 @@ const createHeaderCountPreview = (hit) => {
   return headers.join(" ");
 };
 
-const defaultFilterOptions = {
+const isCorrectHeadingOrder = (hit) => {
+  if (!hit["h3Count"]) return false;
+  if (!hit["h4Count"] && (!!hit["h5Count"] || !!hit["h6Count"])) return false;
+  if (!hit["h5Count"] && !!hit["h6Count"]) return false;
+  return true;
+};
+
+export const defaultFilterOptions = {
   limit: 5,
   showMore: true,
   showMoreLimit: 200,
   sortBy: (a, b) => (a.name.localeCompare(b.name) ? 1 : -1),
 };
 
-search.addWidgets([
+const hasIncorrectLanguageTexts = () =>
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#hasIncorrectLanguageTexts",
+    attribute: "hasIncorrectLanguageTexts",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Muligens feil språkmarkering
+          <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
+  });
+
+const searchBox = () =>
   instantsearch.widgets.searchBox({
     container: "#searchbox",
-  }),
+  });
+
+const hits = () =>
   instantsearch.widgets.hits({
     container: "#hits",
     templates: {
@@ -83,7 +100,7 @@ search.addWidgets([
                 Vis rapport
               </a>
             </p>
-            <p class="${createHeaderCountPreview(hit).startsWith("H1") ? null : "red"}">
+            <p class="${isCorrectHeadingOrder(hit) ? "green" : "red"}">
               Overskriftsnivåer: ${createHeaderCountPreview(hit)}
             </p>
 
@@ -110,25 +127,31 @@ search.addWidgets([
         </article>
       `,
     },
-  }),
+  });
+
+const pagination = () =>
   instantsearch.widgets.pagination({
     container: "#pagination",
     showFirst: false,
     showPrevious: false,
     showNext: false,
     showLast: false,
-  }),
+  });
 
-  /// FILTERS
-
-  // TAGS
-
+const tags = () => [
   instantsearch.widgets.panel({
     templates: { header: "Verk" },
   })(instantsearch.widgets.refinementList)({
     ...defaultFilterOptions,
     container: "#learning-materials",
     attribute: "learningMaterials",
+  }),
+  instantsearch.widgets.panel({
+    templates: { header: "Komponent" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#learning-components",
+    attribute: "learningComponents",
   }),
   instantsearch.widgets.panel({
     templates: { header: "Fag" },
@@ -144,9 +167,9 @@ search.addWidgets([
     container: "#grades",
     attribute: "grades",
   }),
+];
 
-  // HEADING COUNT
-
+const headingCounts = () => [
   instantsearch.widgets.refinementList({
     ...defaultFilterOptions,
     container: "#h3Count",
@@ -199,16 +222,18 @@ search.addWidgets([
         label: `Uten H4`,
       })),
   }),
+];
 
-  // OTHER
-
+const failingAudits = () =>
   instantsearch.widgets.panel({
     templates: { header: "Anmerkninger i automatisk test" },
   })(instantsearch.widgets.refinementList)({
     ...defaultFilterOptions,
     container: "#audits",
     attribute: "lighthouseFailingAudits.title",
-  }),
+  });
+
+const score = () =>
   instantsearch.widgets.panel({
     templates: { header: "Score i automatisk test" },
   })(instantsearch.widgets.numericMenu)({
@@ -235,7 +260,18 @@ search.addWidgets([
         </label>`;
       },
     },
-  }),
+  });
+
+const sectionUsage = () =>
+  instantsearch.widgets.panel({
+    templates: { header: "Brukte seksjoner" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#sectionElementTags",
+    attribute: "sectionElementTags",
+  });
+
+const headingsInSections = () => [
   instantsearch.widgets.panel({
     templates: { header: "Identiske ledetekster" },
   })(instantsearch.widgets.rangeSlider)({
@@ -257,13 +293,9 @@ search.addWidgets([
     attribute: "scExpandsWithHeadingCount",
     pips: false,
   }),
-  instantsearch.widgets.panel({
-    templates: { header: "Brukte seksjoner" },
-  })(instantsearch.widgets.refinementList)({
-    ...defaultFilterOptions,
-    container: "#sectionElementTags",
-    attribute: "sectionElementTags",
-  }),
+];
+
+const missingTitle = () =>
   instantsearch.widgets.toggleRefinement({
     ...defaultFilterOptions,
     container: "#isMissingTitle",
@@ -274,7 +306,9 @@ search.addWidgets([
         return html`Mangler tittel <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
       },
     },
-  }),
+  });
+
+const activityMode = () =>
   instantsearch.widgets.panel({
     templates: { header: "Aktivitetsmodus" },
   })(instantsearch.widgets.refinementList)({
@@ -298,21 +332,36 @@ search.addWidgets([
         };
       });
     },
-  }),
+  });
+
+const sceneCount = () =>
   instantsearch.widgets.panel({
     templates: { header: "Antall scener" },
   })(instantsearch.widgets.rangeSlider)({
     container: "#sceneCount",
     attribute: "sceneCount",
     pips: false,
-  }),
+  });
+
+const parentDocumentTypes = () =>
   instantsearch.widgets.panel({
-    templates: { header: "Brukt i" },
+    templates: { header: "Referanse fra" },
   })(instantsearch.widgets.refinementList)({
     ...defaultFilterOptions,
     container: "#parentDocumentTypes",
     attribute: "parentDocumentTypes",
-  }),
+  });
+
+const hostname = () =>
+  instantsearch.widgets.panel({
+    templates: { header: "Domene" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#hostname",
+    attribute: "hostname",
+  });
+
+const isForeignLanguageWithoutLangAttributes = () =>
   instantsearch.widgets.toggleRefinement({
     ...defaultFilterOptions,
     container: "#isForeignLanguageWithoutLangAttributes",
@@ -324,47 +373,46 @@ search.addWidgets([
           <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
       },
     },
-  }),
-  instantsearch.widgets.toggleRefinement({
-    ...defaultFilterOptions,
-    container: "#hasIncorrectLanguageTexts",
-    attribute: "hasIncorrectLanguageTexts",
-    templates: {
-      labelText(data, { html }) {
-        const count = data.onFacetValue.count;
-        return html`Muligens feil språkmarkering
-          <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
-      },
-    },
-  }),
-]);
+  });
 
-search.start();
+export const search = () => {
+  const s = instantsearch({
+    indexName: ALGOLIA_INDEX_NAME,
+    searchClient: defaultClient,
+    routing: true,
+  });
+  s.addWidgets([
+    searchBox(),
+    hits(),
+    pagination(),
+    ...tags(),
+    ...headingCounts(),
+    ...headingsInSections(),
+    missingTitle(),
+    sceneCount(),
+    isForeignLanguageWithoutLangAttributes(),
+    hasIncorrectLanguageTexts(),
+  ]);
+  return s;
+};
 
-/** Default dummy search by Algolia */
-// const search = instantsearch({
-//   indexName: "instant_search",
-//   searchClient: algoliasearch("latency", "6be0576ff61c053d5f9a3225e2a90f76"),
-// });
-
-/** Optional proxy of search through our backend */
-// const customSearchClient = {
-//   search(requests) {
-//     return fetch("http://localhost:3000/search", {
-//       method: "post",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({ requests }),
-//     }).then((res) => res.json());
-//   },
-//   searchForFacetValues(requests) {
-//     return fetch("http://localhost:3000/sffv", {
-//       method: "post",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({ requests }),
-//     }).then((res) => res.json());
-//   },
-// };
+export const searchDeveloper = () => {
+  const s = instantsearch({
+    indexName: ALGOLIA_INDEX_NAME,
+    searchClient: defaultClient,
+    routing: true,
+  });
+  s.addWidgets([
+    searchBox(),
+    hits(),
+    pagination(),
+    sectionUsage(),
+    ...tags(),
+    failingAudits(),
+    score(),
+    activityMode(),
+    parentDocumentTypes(),
+    hostname(),
+  ]);
+  return s;
+};

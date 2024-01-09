@@ -19,6 +19,17 @@ router.get("/", async (req, res) => {
   });
 });
 
+
+router.get("/developer", async (req, res) => {
+  res.render("search-developer", {
+    title: "uuoversiktlig",
+    subtitle: "Utviklersøk for indekserte sider med tilhørende Lighthouse-rapporter.",
+    ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
+    ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
+  });
+});
+
 router.get("/test", async (req, res) => {
   res.render("manual-url-test", {
     title: "uuoversiktlig",
