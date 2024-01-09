@@ -100,8 +100,9 @@ const hits = () =>
                 Vis rapport
               </a>
             </p>
-            <p class="${isCorrectHeadingOrder(hit) ? "green" : "red"}">
+            <p class="${isCorrectHeadingOrder(hit) ? (hit.hasAutoCorrectedHeadings ? "green" : "orange") : "red"}">
               Overskriftsnivåer: ${createHeaderCountPreview(hit)}
+              ${hit.hasAutoCorrectedHeadings ? " (auto-korrigert)" : null}
             </p>
 
             <details>
@@ -112,7 +113,13 @@ const hits = () =>
               <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
                 ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
               </p>
-              <pre>${hit.incorrectLanguageTexts ? JSON.stringify(hit.incorrectLanguageTexts, null, 2) : null}</pre>
+
+              <p>${hit.hasIncorrectLanguageTexts ? "Mulige språkmarkeringsfeil" : null}</p>
+              <pre>${hit.hasIncorrectLanguageTexts ? JSON.stringify(hit.incorrectLanguageTexts, null, 2) : null}</pre>
+
+              <p>${hit.hasAutoCorrectedHeadings ? "Autokorrigerte overskrifter" : null}</p>
+              <pre>${hit.hasAutoCorrectedHeadings ? JSON.stringify(hit.autoCorrectedHeadings, null, 2) : null}</pre>
+
               <p>${hit.savedAt ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}` : null}</p>
             </details>
             <br />
@@ -168,6 +175,19 @@ const tags = () => [
     attribute: "grades",
   }),
 ];
+
+const hasAutoCorrectedHeadings = () =>
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#hasAutoCorrectedHeadings",
+    attribute: "hasAutoCorrectedHeadings",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Autokorrigert <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
+  });
 
 const headingCounts = () => [
   instantsearch.widgets.refinementList({
@@ -392,6 +412,7 @@ export const search = () => {
     sceneCount(),
     isForeignLanguageWithoutLangAttributes(),
     hasIncorrectLanguageTexts(),
+    hasAutoCorrectedHeadings(),
   ]);
   return s;
 };
@@ -413,6 +434,7 @@ export const searchDeveloper = () => {
     activityMode(),
     parentDocumentTypes(),
     hostname(),
+    hasAutoCorrectedHeadings(),
   ]);
   return s;
 };

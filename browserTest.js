@@ -116,6 +116,23 @@ const runBrowserTest = async (url) => {
           .length
     );
 
+    // check auto corrected headings
+    const autoCorrectedHeadings = await page.evaluate(() => {
+      const autoCorrectedHeadingsLocal = [];
+
+      document.querySelectorAll("[data-fixed-heading]").forEach(
+        /** @param {HTMLDivElement} el */ (el) => {
+          autoCorrectedHeadingsLocal.push({
+            newTag: el.nodeName,
+            originalTag: JSON.parse(el.getAttribute("data-fixed-heading"))?.originalTag?.toUpperCase(),
+            text: el.innerText,
+          });
+        }
+      );
+
+      return autoCorrectedHeadingsLocal;
+    });
+
     const activityData = await page.evaluate(() => {
       // @ts-ignore
       const initialState = window.initialState;
@@ -176,6 +193,8 @@ const runBrowserTest = async (url) => {
       ...hCount,
       scLabelsWithHeadingCount,
       scExpandsWithHeadingCount,
+      hasAutoCorrectedHeadings: autoCorrectedHeadings.length > 0,
+      autoCorrectedHeadings,
       isForeignLanguageWithoutLangAttributes: langTest.hasForeignLanguage && !langTest.hasInnerLangAttributes,
       hasIncorrectLanguageTexts: langTest.incorrectLanguageTexts.length > 0,
       incorrectLanguageTexts: langTest.incorrectLanguageTexts,
