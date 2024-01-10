@@ -1,5 +1,5 @@
 import { runBrowserTest } from "./browserTest.js";
-import { saveBlob } from "./blobStorage.js";
+import { createBlobName, createBlobUrl, saveBlob } from "./blobStorage.js";
 import { saveRecords } from "./searchClient.js";
 import { logger } from "./utils.js";
 
@@ -14,9 +14,12 @@ export const runUrl = async (/** @type {string} */ inputUrl) => {
 
   log("start", id);
 
+  // @ts-ignore
   const { lighthouseReport, ...uiTestRecord } = await runBrowserTest(url.href);
 
-  const jsonUrl = await saveBlob(id, JSON.stringify(lighthouseReport));
+  const jsonUrl = uiTestRecord.lighthouseEnabled
+    ? await saveBlob(id, JSON.stringify(lighthouseReport))
+    : createBlobUrl(createBlobName(id));
 
   const record = {
     objectID: id,

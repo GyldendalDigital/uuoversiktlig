@@ -418,23 +418,15 @@ export const search = () => {
 };
 
 export const searchDeveloper = () => {
-  const s = instantsearch({
-    indexName: ALGOLIA_INDEX_NAME,
-    searchClient: defaultClient,
-    routing: true,
-  });
+  const s = search();
+  
   s.addWidgets([
-    searchBox(),
-    hits(),
-    pagination(),
     sectionUsage(),
-    ...tags(),
     failingAudits(),
     score(),
     activityMode(),
     parentDocumentTypes(),
     hostname(),
-    hasAutoCorrectedHeadings(),
   ]);
   return s;
 };

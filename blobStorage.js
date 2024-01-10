@@ -14,10 +14,17 @@ const containerName = "lighthousereports";
 
 /**
  *
+ * @param {string} id
+ * @returns {string}
+ */
+export const createBlobName = (id) => id + ".json";
+
+/**
+ *
  * @param {string} blobName
  * @returns {string}
  */
-const createBlobUrl = (blobName) =>
+export const createBlobUrl = (blobName) =>
   `https://${process.env.AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${containerName}/${blobName}`;
 
 /**
@@ -26,7 +33,7 @@ const createBlobUrl = (blobName) =>
  * @param {string} json
  * @returns {Promise<string>}
  */
-const saveBlob = async (id, json) => {
+export const saveBlob = async (id, json) => {
   // Get a reference to a container
   const containerClient = blobServiceClient.getContainerClient(containerName);
 
@@ -34,7 +41,7 @@ const saveBlob = async (id, json) => {
   await containerClient.createIfNotExists();
 
   // Create a unique name for the blob
-  const blobName = id + ".json";
+  const blobName = createBlobName(id);
 
   // Get a block blob client
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -47,5 +54,3 @@ const saveBlob = async (id, json) => {
 
   return createBlobUrl(blobName);
 };
-
-export { saveBlob };

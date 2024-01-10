@@ -55,30 +55,29 @@ const runBrowserTest = async (url) => {
       log("ping", status);
     }
 
-    log("lighthouse start");
+    let lighthouseResult = {
+      lighthouseEnabled: process.env.ENABLE_LIGHTHOUSE === "true",
+    };
 
-    const result = await lighthouse(url, undefined, lighthouseOptions, page);
-    // const result = { lhr: { timing: {}, categories: { accessibility: {} }, audits: {} } };
+    if (lighthouseResult.lighthouseEnabled) {
+      log("lighthouse start");
+      const lighthouseRunnerResult = await lighthouse(url, undefined, lighthouseOptions, page);
+      lighthouseResult.lighthouseReport = lighthouseRunnerResult.lhr;
 
-    if (result.lhr.runtimeError) {
-      log("lighthouse error", url);
-      throw new Error(
-        JSON.stringify({
-          url,
-          totalElapsedMs: Date.now() - start,
-          error: result.lhr.runtimeError,
-        })
-      );
+      if (lighthouseRunnerResult.lhr.runtimeError) {
+        lighthouseResult.lighthouseSuccess = false;
+      } else {
+        lighthouseResult.lighthouseSuccess = true;
+        lighthouseResult.lighthouseElapsedMs = lighthouseRunnerResult.lhr.timing.total;
+        lighthouseResult.lighthouseTotalScore = lighthouseRunnerResult.lhr.categories.accessibility.score;
+        lighthouseResult.lighthouseFailingAudits = objectMap(lighthouseRunnerResult.lhr.audits, toSimpleAudit).filter(
+          (a) => a.score !== null && a.score !== 1
+        );
+      }
+      log("lighthouse end", lighthouseResult.lighthouseElapsedMs);
+    } else {
+      log("lighthouse disabled");
     }
-
-    log("lighthouse end");
-
-    const lighthouseReport = result.lhr;
-    const lighthouseElapsedMs = result.lhr.timing.total;
-    const lighthouseTotalScore = result.lhr.categories.accessibility.score;
-    const lighthouseFailingAudits = objectMap(result.lhr.audits, toSimpleAudit).filter(
-      (a) => a.score !== null && a.score !== 1
-    );
 
     /// OTHER TESTS
     log("other start");
@@ -184,10 +183,7 @@ const runBrowserTest = async (url) => {
       totalElapsedMs: Date.now() - start,
       url,
 
-      lighthouseReport,
-      lighthouseElapsedMs,
-      lighthouseTotalScore,
-      lighthouseFailingAudits,
+      ...lighthouseResult,
 
       identicalLabelCount,
       ...hCount,

@@ -4,12 +4,12 @@ export interface SearchRecord {
   jsonUrl: string;
 
   // uiTestRecord
-  title: string;
-  totalElapsedMs: number;
-  identicalLabelCount: number;
-  lighthouseElapsedMs: number;
-  lighthouseTotalScore: number;
-  lighthouseFailingAudits: LighthouseAudit[];
+  // title: string;
+  // totalElapsedMs: number;
+  // identicalLabelCount: number;
+  // lighthouseElapsedMs: number;
+  // lighthouseTotalScore: number;
+  // lighthouseFailingAudits: LighthouseAudit[];
 }
 
 export interface LighthouseResult {
