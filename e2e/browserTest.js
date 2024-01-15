@@ -1,6 +1,5 @@
 import { launch } from "puppeteer";
 import { logger } from "./utils.js";
-import { francAll } from "franc";
 import { runLighthouseTest } from "./lighthouseTest.js";
 import { runActivityDataTest } from "./activityDataTest.js";
 import { runLanguageTest } from "./languageTest.js";
@@ -47,9 +46,9 @@ const runBrowserTest = async (url) => {
 
     const lighthouseResult = await runLighthouseTest(url, page);
 
-    const activityDataTest = await runActivityDataTest(page);
+    const activity = await runActivityDataTest(page);
 
-    const languageTest = await runLanguageTest(page, activityDataTest?.subjects ?? []);
+    const languageTest = await runLanguageTest(page, activity?.subjects ?? []);
 
     const headingTest = await runHeadingTest(page);
 
@@ -57,21 +56,17 @@ const runBrowserTest = async (url) => {
 
     const title = await page.title();
 
-    /// RETURN
-
-    const uiTestRecord = {
+    return {
       title,
       elapsedMs: Date.now() - start,
       url,
 
-      ...activityDataTest,
+      activity,
       ...lighthouseResult,
+      ...languageTest,
       ...headingTest,
       ...restTest,
-      ...languageTest,
     };
-
-    return uiTestRecord;
   } catch (error) {
     log("caught error", error.message);
     throw error;

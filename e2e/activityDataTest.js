@@ -7,9 +7,10 @@ export const runActivityDataTest = async (page) =>
   await page.evaluate(() => {
     // @ts-ignore
     const initialState = window.initialState;
+
     const activity = initialState?.activity;
     if (activity) {
-      const getActivityThumbnail = (activity) => {
+      const getActivityThumbnail = () => {
         const damImage =
           activity.thumbnailDetails ??
           activity.backgroundImageDetails ??
@@ -31,7 +32,7 @@ export const runActivityDataTest = async (page) =>
         topics: activity.topics,
 
         studentVisible: activity.studentVisible,
-        thumbnail: getActivityThumbnail(activity),
+        thumbnail: getActivityThumbnail(),
         mode: initialState.originalActivityMode,
         sceneCount: activity.scenes?.length || 0,
         sectionElementTags: initialState.sectionElementTags,

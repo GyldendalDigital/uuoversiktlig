@@ -1,4 +1,5 @@
 node_modules
 .cache
 .env
-.activity-id-list.json
+
+activity-id-list.json

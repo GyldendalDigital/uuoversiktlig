@@ -30,3 +30,9 @@ export const langFromFrancToIso = (/** @type {string} */ lang) => {
   if (lang === "spa") return "es-ES";
   return "nb-NO";
 };
+
+export const countBy = (/** @type {any[]} */ arr, /** @type {string | number} */ fn) =>
+  arr.map(typeof fn === "function" ? fn : (val) => val[fn]).reduce((acc, val) => {
+    acc[val] = (acc[val] || 0) + 1;
+    return acc;
+  }, {});

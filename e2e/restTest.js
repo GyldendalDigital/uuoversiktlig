@@ -4,7 +4,7 @@
  * @param {import("puppeteer/lib/types.js").Page} page
  */
 export const runRestTest = async (page) => {
-  const restHasIdenticalAriaLabels = await page.evaluate(() => {
+  const hasIdenticalAriaLabels = await page.evaluate(() => {
     const inputFields = Array.from(document.querySelectorAll("input"));
 
     const ariaLabels = inputFields.map((input) => {
@@ -17,34 +17,35 @@ export const runRestTest = async (page) => {
     return identicalLabels.length > 0;
   });
 
-  //TODO: make sure it works
-  const specialCharacterData = await page.evaluate(() => {
-    const specialCharacters = ["–", "—"];
-    const specialCharacterList = [];
+  const specialCharacters = await page.evaluate(() => {
+    const characters = ["–", "—"];
+    const charactersFound = [];
 
     document.querySelectorAll("div[class^='SectionFocusContainer'][lang],div[class^='sc-'][lang]").forEach(
       /** @param {HTMLDivElement} el */ (el) => {
         if (!el.innerText) return;
 
-        for (const specialCharacter of specialCharacters) {
-          const count = el.innerText.match(new RegExp(specialCharacter, "g"))?.length;
+        for (const character of characters) {
+          const count = el.innerText.match(new RegExp(character, "g"))?.length;
           if (count) {
             for (let i = 0; i < count; i++) {
-              specialCharacterList.push(specialCharacter);
+              charactersFound.push(character);
             }
           }
-          console.log("a", el.innerText.match(/–|—/g))
         }
-
-        // "".match(/–|—/g)?.length
       }
     );
-console.log(specialCharacterList);
-    return specialCharacterList.reduce((a, c) => ((a[c] = (a[c] || 0) + 1), a), {});
+
+    const specialCharacterCount = charactersFound.reduce((a, c) => ((a[c] = (a[c] || 0) + 1), a), {});
+
+    return Object.entries(specialCharacterCount).map(([character, count]) => ({
+      character,
+      count,
+    }));
   });
 
   return {
-    restHasIdenticalAriaLabels,
-    ...specialCharacterData,
+    hasIdenticalAriaLabels,
+    specialCharacters,
   };
 };
