@@ -42,11 +42,32 @@ const createHeaderCountPreview = (hit) => {
   return headers.join(" ");
 };
 
+const translateHeadingLevel = (headingTag) => "H" + (parseInt(headingTag.replace(/\D/g, "")) - 2);
+
 const isCorrectHeadingOrder = (hit) => {
   if (!hit["h3Count"]) return false;
   if (!hit["h4Count"] && (!!hit["h5Count"] || !!hit["h6Count"])) return false;
   if (!hit["h5Count"] && !!hit["h6Count"]) return false;
   return true;
+};
+
+const mapFrancLang = (francLang) => {
+  switch (francLang) {
+    case "nno":
+      return "nn-NO";
+    case "nob":
+      return "nb-NO";
+    case "eng":
+      return "en-GB";
+    case "deu":
+      return "de-DE";
+    case "fra":
+      return "fr-FR";
+    case "spa":
+      return "es-ES";
+    default:
+      return francLang;
+  }
 };
 
 export const defaultFilterOptions = {
@@ -55,20 +76,6 @@ export const defaultFilterOptions = {
   showMoreLimit: 200,
   sortBy: (a, b) => (a.name.localeCompare(b.name) ? 1 : -1),
 };
-
-const hasIncorrectLanguageTexts = () =>
-  instantsearch.widgets.toggleRefinement({
-    ...defaultFilterOptions,
-    container: "#hasIncorrectLanguageTexts",
-    attribute: "hasIncorrectLanguageTexts",
-    templates: {
-      labelText(data, { html }) {
-        const count = data.onFacetValue.count;
-        return html`Muligens feil språkmarkering
-          <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
-      },
-    },
-  });
 
 const searchBox = () =>
   instantsearch.widgets.searchBox({
@@ -86,50 +93,72 @@ const hits = () =>
           </div>
           <div class="hit-content">
             <h3><a href="${createContentUrl(hit.url)}" target="_blank" rel="noopener noreferrer">${hit.title}</a></h3>
+
             <p>
               ${hit.learningMaterials ? ` ${hit.learningMaterials.join(", ")} ` : null}
               ${hit.subjects ? `${hit.subjects.join(", ")} ` : null} ${hit.grades ? `${hit.grades.join(", ")} ` : null}
             </p>
-            <p>
-              Automatisk test score: ${hit.lighthouseTotalScore ? " " + hit.lighthouseTotalScore * 100 : null}% ${" "}
-              <a
-                href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Vis rapport
-              </a>
-            </p>
-            <p class="${isCorrectHeadingOrder(hit) ? (hit.hasAutoCorrectedHeadings ? "green" : "orange") : "red"}">
-              Overskriftsnivåer: ${createHeaderCountPreview(hit)}
-              ${hit.hasAutoCorrectedHeadings ? " (auto-korrigert)" : null}
-            </p>
 
-            <details>
-              <p class="${hit.identicalLabelCount ? null : "grey"}">${hit.identicalLabelCount} identiske ledetekster</p>
-              <p class="${hit.scLabelsWithHeadingCount ? null : "grey"}">
-                ${hit.scLabelsWithHeadingCount} Label-seksjoner med overskriftsnivå
-              </p>
-              <p class="${hit.scExpandsWithHeadingCount ? null : "grey"}">
-                ${hit.scExpandsWithHeadingCount} Expand-seksjoner med overskriftsnivå
-              </p>
-
-              <p>${hit.hasIncorrectLanguageTexts ? "Mulige språkmarkeringsfeil" : null}</p>
-              <pre>${hit.hasIncorrectLanguageTexts ? JSON.stringify(hit.incorrectLanguageTexts, null, 2) : null}</pre>
-
-              <p>${hit.hasAutoCorrectedHeadings ? "Autokorrigerte overskrifter" : null}</p>
-              <pre>${hit.hasAutoCorrectedHeadings ? JSON.stringify(hit.autoCorrectedHeadings, null, 2) : null}</pre>
-
-              <p>${hit.savedAt ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}` : null}</p>
-            </details>
-            <br />
-
-            <a class="retest-link" href="${createRetestUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
-              Test på nytt
-            </a>
             <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
               <img class="redaptic-svg" src="/redaptic.svg" />
             </a>
+
+            <details>
+              <p>
+                Automatisk test score: ${hit.lighthouseTotalScore ? " " + hit.lighthouseTotalScore * 100 : null}% ${" "}
+                <a
+                  href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vis rapport
+                </a>
+              </p>
+              <br />
+
+              <p>
+                Overskriftsnivåer:
+                <span class="${isCorrectHeadingOrder(hit) ? "green" : "red"}"> ${createHeaderCountPreview(hit)}</span>
+              </p>
+              ${hit.hasAutoCorrectedHeadings
+                ? html`<details>
+                    <summary class="orange">Autokorrigeringer</summary>
+                    ${hit.autoCorrectedHeadings?.map(
+                      (h) => html`<p>
+                        <code class="orange">${translateHeadingLevel(h.originalTag)} </code>
+                        <code class="green">${translateHeadingLevel(h.newTag)}</code>
+                        <br />
+                        <i>${h.text}</i>
+                      </p>`
+                    )}
+                  </details>`
+                : null}
+              <br />
+
+              <p>
+                ${hit.hasIncorrectLanguageTexts
+                  ? html`Språkmarkering
+                      <details>
+                        <summary class="orange">Forslag på endringer</summary>
+                        ${hit.incorrectLanguageTexts.map(
+                          (langText) => html`<p>
+                            <code class="orange">${langText.lang} </code>
+                            <code class="green">${mapFrancLang(langText.mostProbableLang)}</code>
+                            <br />
+                            <i>${langText.text}</i>
+                          </p>`
+                        )}
+                      </details>`
+                  : null}
+              </p>
+              <br />
+
+              <p>${hit.savedAt ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}` : null}</p>
+
+              <a class="retest-link" href="${createRetestUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
+                Test på nytt
+              </a>
+            </details>
           </div>
         </article>
       `,
@@ -176,20 +205,21 @@ const tags = () => [
   }),
 ];
 
-const hasAutoCorrectedHeadings = () =>
-  instantsearch.widgets.toggleRefinement({
+const headingCounts = () => [
+  instantsearch.widgets.refinementList({
     ...defaultFilterOptions,
     container: "#hasAutoCorrectedHeadings",
     attribute: "hasAutoCorrectedHeadings",
-    templates: {
-      labelText(data, { html }) {
-        const count = data.onFacetValue.count;
-        return html`Autokorrigert <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
-      },
-    },
-  });
-
-const headingCounts = () => [
+    showMore: false,
+    transformItems: (items, { results }) =>
+      items
+        .filter((item) => item.value === "true")
+        .map((item) => ({
+          ...item,
+          highlighted: `Autokorrigert`,
+          label: `Autokorrigert`,
+        })),
+  }),
   instantsearch.widgets.refinementList({
     ...defaultFilterOptions,
     container: "#h3Count",
@@ -242,16 +272,57 @@ const headingCounts = () => [
         label: `Uten H4`,
       })),
   }),
-];
-
-const failingAudits = () =>
-  instantsearch.widgets.panel({
-    templates: { header: "Anmerkninger i automatisk test" },
-  })(instantsearch.widgets.refinementList)({
+  instantsearch.widgets.numericMenu({
     ...defaultFilterOptions,
-    container: "#audits",
-    attribute: "lighthouseFailingAudits.title",
-  });
+    container: "#scLabelsWithHeadingCount",
+    attribute: "scLabelsWithHeadingCount",
+    items: [{ label: "Uten Label-overskrift", start: 0, end: 0 }],
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        count: item.isRefined && results ? results.nbHits : 0,
+      })),
+    templates: {
+      item(data, { html }) {
+        return html`<label class="${data.cssClasses.label}">
+          <input
+            type="checkbox"
+            class="${data.cssClasses.radio}"
+            name="${data.attribute}"
+            checked="${data.isRefined ? "checked" : ""}"
+          />
+          <span class="${data.cssClasses.labelText}"> ${data.label} </span>
+          <span class="${data.count ? "ais-RefinementList-count" : null}">${data.count ? `${data.count}` : null}</span>
+        </label>`;
+      },
+    },
+  }),
+  instantsearch.widgets.numericMenu({
+    ...defaultFilterOptions,
+    container: "#scExpandsWithHeadingCount",
+    attribute: "scExpandsWithHeadingCount",
+    items: [{ label: "Uten Expand-overskrift", start: 0, end: 0 }],
+    transformItems: (items, { results }) =>
+      items.map((item) => ({
+        ...item,
+        count: item.isRefined && results ? results.nbHits : 0,
+      })),
+    templates: {
+      item(data, { html }) {
+        return html`<label class="${data.cssClasses.label}">
+          <input
+            type="checkbox"
+            class="${data.cssClasses.radio}"
+            name="${data.attribute}"
+            checked="${data.isRefined ? "checked" : ""}"
+          />
+          <span class="${data.cssClasses.labelText}"> ${data.label} </span>
+          <span class="${data.count ? "ais-RefinementList-count" : null}">${data.count ? `${data.count}` : null}</span>
+        </label>`;
+      },
+    },
+  }),
+];
 
 const score = () =>
   instantsearch.widgets.panel({
@@ -268,7 +339,7 @@ const score = () =>
       })),
     templates: {
       item(data, { html }) {
-        return html` <label class="${data.cssClasses.label}">
+        return html`<label class="${data.cssClasses.label}">
           <input
             type="radio"
             class="${data.cssClasses.radio}"
@@ -282,6 +353,45 @@ const score = () =>
     },
   });
 
+// const identicalLabelCount = () =>
+//   instantsearch.widgets.numericMenu({
+//     container: "#identicalLabelCount",
+//     attribute: "identicalLabelCount",
+//     items: [
+//       { label: "Uten identiske ledetekster", start: 0, end: 0 },
+//       { label: "Med identiske ledetekster", start: 1 },
+//     ],
+//     transformItems: (items, { results }) =>
+//       items.map((item) => ({
+//         ...item,
+//         count: item.isRefined && results ? results.nbHits : 0,
+//       })),
+//     templates: {
+//       item(data, { html }) {
+//         console.log(data);
+//         return html`<label class="${data.cssClasses.label}">
+//           <input
+//             type="checkbox"
+//             class="${data.cssClasses.radio}"
+//             name="${data.attribute}"
+//             checked="${data.isRefined ? "checked" : ""}"
+//           />
+//           <span class="${data.cssClasses.labelText}"> ${data.label} </span>
+//           <span class="${data.count ? "ais-RefinementList-count" : null}">${data.count ? `${data.count}` : null}</span>
+//         </label>`;
+//       },
+//     },
+//   });
+
+const failingAudits = () =>
+  instantsearch.widgets.panel({
+    templates: { header: "Anmerkninger i automatisk test" },
+  })(instantsearch.widgets.refinementList)({
+    ...defaultFilterOptions,
+    container: "#audits",
+    attribute: "lighthouseFailingAudits.title",
+  });
+
 const sectionUsage = () =>
   instantsearch.widgets.panel({
     templates: { header: "Brukte seksjoner" },
@@ -290,30 +400,6 @@ const sectionUsage = () =>
     container: "#sectionElementTags",
     attribute: "sectionElementTags",
   });
-
-const headingsInSections = () => [
-  instantsearch.widgets.panel({
-    templates: { header: "Identiske ledetekster" },
-  })(instantsearch.widgets.rangeSlider)({
-    container: "#identicalLabelCount",
-    attribute: "identicalLabelCount",
-    pips: false,
-  }),
-  instantsearch.widgets.panel({
-    templates: { header: "Label-seksjoner med overskriftsnivå" },
-  })(instantsearch.widgets.rangeSlider)({
-    container: "#scLabelsWithHeadingCount",
-    attribute: "scLabelsWithHeadingCount",
-    pips: false,
-  }),
-  instantsearch.widgets.panel({
-    templates: { header: "Expand-seksjoner med overskriftsnivå" },
-  })(instantsearch.widgets.rangeSlider)({
-    container: "#scExpandsWithHeadingCount",
-    attribute: "scExpandsWithHeadingCount",
-    pips: false,
-  }),
-];
 
 const missingTitle = () =>
   instantsearch.widgets.toggleRefinement({
@@ -354,15 +440,6 @@ const activityMode = () =>
     },
   });
 
-const sceneCount = () =>
-  instantsearch.widgets.panel({
-    templates: { header: "Antall scener" },
-  })(instantsearch.widgets.rangeSlider)({
-    container: "#sceneCount",
-    attribute: "sceneCount",
-    pips: false,
-  });
-
 const parentDocumentTypes = () =>
   instantsearch.widgets.panel({
     templates: { header: "Referanse fra" },
@@ -381,7 +458,7 @@ const hostname = () =>
     attribute: "hostname",
   });
 
-const isForeignLanguageWithoutLangAttributes = () =>
+const languageFilters = () => [
   instantsearch.widgets.toggleRefinement({
     ...defaultFilterOptions,
     container: "#isForeignLanguageWithoutLangAttributes",
@@ -389,11 +466,23 @@ const isForeignLanguageWithoutLangAttributes = () =>
     templates: {
       labelText(data, { html }) {
         const count = data.onFacetValue.count;
-        return html`Fremmedspråk uten språkmarkering
+        return html`Fremmedspråk uten markering
           <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
       },
     },
-  });
+  }),
+  instantsearch.widgets.toggleRefinement({
+    ...defaultFilterOptions,
+    container: "#hasIncorrectLanguageTexts",
+    attribute: "hasIncorrectLanguageTexts",
+    templates: {
+      labelText(data, { html }) {
+        const count = data.onFacetValue.count;
+        return html`Forslag til endringer <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+      },
+    },
+  }),
+];
 
 export const search = () => {
   const s = instantsearch({
@@ -407,26 +496,16 @@ export const search = () => {
     pagination(),
     ...tags(),
     ...headingCounts(),
-    ...headingsInSections(),
+    ...languageFilters(),
     missingTitle(),
-    sceneCount(),
-    isForeignLanguageWithoutLangAttributes(),
-    hasIncorrectLanguageTexts(),
-    hasAutoCorrectedHeadings(),
+    // identicalLabelCount(),
   ]);
   return s;
 };
 
 export const searchDeveloper = () => {
   const s = search();
-  
-  s.addWidgets([
-    sectionUsage(),
-    failingAudits(),
-    score(),
-    activityMode(),
-    parentDocumentTypes(),
-    hostname(),
-  ]);
+
+  s.addWidgets([sectionUsage(), failingAudits(), score(), activityMode(), parentDocumentTypes(), hostname()]);
   return s;
 };

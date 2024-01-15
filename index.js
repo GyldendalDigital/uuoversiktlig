@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
     title: "uuoversiktlig",
     subtitle: "Automatisk testing av publiserte aktiviteter i Redaptic.",
     ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
+    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
     ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
   });
 });
@@ -25,7 +25,7 @@ router.get("/developer", async (req, res) => {
     title: "uuoversiktlig",
     subtitle: "Utviklersøk for indekserte sider med tilhørende Lighthouse-rapporter.",
     ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME,
+    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
     ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
   });
 });
