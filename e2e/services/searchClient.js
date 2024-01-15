@@ -1,5 +1,9 @@
 import algoliasearch from "algoliasearch";
-import { logger } from "./utils.js";
+import { logger } from "../utils.js";
+
+/**
+ * Index e2e metadata for each tested URL to a record in Algolia
+ */
 
 const log = logger("Algolia").log;
 
@@ -14,7 +18,7 @@ const client = algoliasearch.default(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
 const index = client.initIndex(ALGOLIA_INDEX_NAME);
 
 /**
- * @param {import("./types.ts").SearchRecord[]} records
+ * @param {import("../types.js").SearchRecord[]} records
  */
 export const saveRecords = async (records) => {
   log("indexing records", records);
@@ -26,6 +30,3 @@ export const saveRecords = async (records) => {
     throw error;
   }
 };
-
-export const searchRecords = async (requests) => client.search(requests);
-export const searchFacets = async (requests) => client.searchForFacetValues(requests);

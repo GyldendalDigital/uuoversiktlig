@@ -1,10 +1,13 @@
-import { delay, ServiceBusClient } from "@azure/service-bus";
-import { runUrl } from "./runUrl.js";
-import { logger } from "./utils.js";
+import { ServiceBusClient } from "@azure/service-bus";
+import { runUrl } from "../main.js";
+import { logger } from "../utils.js";
+
+/**
+ * Listens for messages from Azure Service Bus and runs an e2e test for the URL in the message body
+ */
 
 const log = logger("ServiceBus").log;
 
-// TODO: replace with @azure/identity
 const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
 const queueName = process.env.AZURE_SERVICE_BUS_QUEUE_NAME;
@@ -19,7 +22,7 @@ export const subscribeToMessages = async () => {
 
   const receiver = sbClient.createReceiver(queueName);
 
-  const processMessage = async (messageReceived) => {
+  const processMessage = async (/** @type {{ body: string; }} */ messageReceived) => {
     try {
       if (!messageReceived.body || typeof messageReceived.body !== "string") {
         throw Error("Invalid URL");
@@ -42,10 +45,4 @@ export const subscribeToMessages = async () => {
   });
 
   log("listening for messages");
-
-  // Waiting long enough before closing the sender to send messages
-  // await delay(20000);
-
-  // await receiver.close();
-  // await sbClient.close();
 };

@@ -1,32 +1,29 @@
 import express from "express";
 import ejs from "ejs";
-import { searchFacets, searchRecords } from "./searchClient.js";
-import { runUrl } from "./runUrl.js";
-import { subscribeToMessages } from "./serviceBus.js";
-import { logger } from "./utils.js";
+import { runUrl } from "./e2e/main.js";
+import { subscribeToMessages } from "./e2e/services/serviceBus.js";
+import { logger } from "./e2e/utils.js";
 
 const Express = express;
 const router = Express.Router();
-const log = logger("Server").log;
+const log = logger("Api").log;
 
-router.get("/", async (req, res) => {
-  res.render("search", {
-    title: "uuoversiktlig",
-    subtitle: "Automatisk testing av publiserte aktiviteter i Redaptic.",
-    ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
-    ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
-  });
+const searchMetadata = () => ({
+  title: "uuoversiktlig",
+  subtitle: "Automatisk testing av publiserte aktiviteter i Redaptic.",
+  ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+  ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
+  ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
 });
 
+router.get("/", async (_req, res) => {
+  res.render("search", searchMetadata());
+});
 
-router.get("/developer", async (req, res) => {
+router.get("/developer", async (_req, res) => {
   res.render("search-developer", {
-    title: "uuoversiktlig",
+    ...searchMetadata(),
     subtitle: "Utviklersøk for indekserte sider med tilhørende Lighthouse-rapporter.",
-    ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
-    ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
   });
 });
 
@@ -48,20 +45,6 @@ router.post("/run", async (req, res) => {
 
   res.send(record);
   res.end();
-});
-
-/** Optional proxy of search through our backend */
-router.post("/search", async ({ body }, res) => {
-  const { requests } = body;
-  const results = await searchRecords(requests);
-  res.status(200).send(results);
-});
-
-/** Optional proxy of search through our backend */
-router.post("/sffv", async ({ body }, res) => {
-  const { requests } = body;
-  const results = await searchFacets(requests);
-  res.status(200).send(results);
 });
 
 const server = Express();

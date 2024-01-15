@@ -1,6 +1,6 @@
 import { ServiceBusClient } from "@azure/service-bus";
 import activityIds from "./activity-id-list.json" assert { type: "json" };
-import { logger } from "./utils.js";
+import { logger } from "../e2e/utils.js";
 
 const log = logger("Feeder").log;
 
@@ -8,7 +8,6 @@ const log = logger("Feeder").log;
  * Temporary replacement for CMS message service
  */
 
-// TODO: replace with @azure/identity
 const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
 const queueName = process.env.AZURE_SERVICE_BUS_QUEUE_NAME;

@@ -1,5 +1,9 @@
 import { BlobServiceClient } from "@azure/storage-blob";
-import { logger } from "./utils.js";
+import { logger } from "../utils.js";
+
+/**
+ * Uploads the lighthouse report to Azure Blob Storage
+ */
 
 const log = logger("Blob").log;
 
@@ -7,7 +11,6 @@ if (!process.env.AZURE_STORAGE_CONNECTION_STRING) {
   throw Error("Azure Storage Connection string not found");
 }
 
-// TODO: replace with @azure/identity
 const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
 const containerName = "lighthousereports";

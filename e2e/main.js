@@ -1,6 +1,6 @@
 import { runBrowserTest } from "./browserTest.js";
-import { createBlobName, createBlobUrl, saveBlob } from "./blobStorage.js";
-import { saveRecords } from "./searchClient.js";
+import { createBlobName, createBlobUrl, saveBlob } from "./services/blobStorage.js";
+import { saveRecords } from "./services/searchClient.js";
 import { logger } from "./utils.js";
 
 const log = logger("Runner").log;
@@ -27,6 +27,7 @@ export const runUrl = async (/** @type {string} */ inputUrl) => {
     hostname,
     jsonUrl,
     savedAt: new Date().toISOString(),
+    timestamp: Date.now(),
     ...uiTestRecord,
   };
 
