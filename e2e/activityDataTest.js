@@ -38,6 +38,7 @@ export const runActivityDataTest = async (page) =>
         sectionElementTags: initialState.sectionElementTags,
         isMissingTitle: !activity.title?.value,
         parentDocumentTypes: initialState.parentDocumentTypes,
+        firstSectionElementTag: activity.scenes?.[0]?.rows?.[0]?.columns?.[0]?.activitySections?.[0]?.element,
       };
     }
   });

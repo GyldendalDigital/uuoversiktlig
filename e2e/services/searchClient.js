@@ -17,12 +17,24 @@ const client = algoliasearch.default(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
 // https://www.algolia.com/doc/api-client/getting-started/instantiate-client-index/#initialize-an-index
 const index = client.initIndex(ALGOLIA_INDEX_NAME);
 
-/**
- * @param {import("../types.js").SearchRecord[]} records
- */
 export const saveRecords = async (records) => {
-  log("indexing records", records);
+  if (!records.length) {
+    log("no records to index");
+    return [];
+  }
+
   try {
+    for (const record of records) {
+      if (!record.objectID) {
+        throw new Error("Missing objectID");
+      }
+      if (JSON.stringify(record).length > 10000) {
+        throw new Error("Record too large");
+      }
+    }
+
+    log("indexing records", records);
+
     const indexResult = await index.saveObjects(records);
     return indexResult.objectIDs;
   } catch (error) {

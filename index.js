@@ -42,6 +42,10 @@ router.post("/run", async (req, res) => {
   }
 
   const record = await runUrl(req.body.url);
+  if (record.isError) {
+    res.status(500).send(record);
+    return;
+  }
 
   res.send(record);
   res.end();

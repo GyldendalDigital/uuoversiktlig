@@ -1,7 +1,8 @@
+import { sectionLangWrapperSelector } from "./sectionConstants.js";
 import { langFromFrancToIso, langFromIsoToFranc, logger } from "./utils.js";
 import { francAll } from "franc";
 
-const log = logger("runLanguageTest").log;
+const log = logger("Language").log;
 
 /**
  * Do various tests on section texts to check for language errors
@@ -15,36 +16,59 @@ export const runLanguageTest = async (page, subjects) => {
   const maxScoreForSecond = 0.75;
 
   // retrieve all section texts
-  const sectionTest = await page.evaluate(() => {
-    const minimumTextLengthForDetection = 3;
-    const texts = [];
-    let hasInnerLangAttributes = false;
+  const sectionTest = await page.evaluate(
+    (sectionLangWrapperSelector, minimumTextLengthForDetection) => {
+      const texts = [];
+      let hasInnerLangAttributes = false;
 
-    /** Select all sections with lang attribute (should be all) */
-    document.querySelectorAll("div[class^='SectionFocusContainer'][lang],div[class^='sc-'][lang]").forEach(
-      /** @param {HTMLDivElement} el */ (el) => {
-        if (!el.innerText || el.innerText.length < minimumTextLengthForDetection) return;
+      /** Select all sections with lang attribute (should be all) */
+      document.querySelectorAll(sectionLangWrapperSelector).forEach(
+        /** @param {HTMLDivElement} el */ (el) => {
+          if (!el.innerText || el.innerText.length < minimumTextLengthForDetection) return;
 
-        // probably already language tagged, skip. Also franc performs poorly on short texts
-        const subElementsWithLang = el.querySelectorAll("[lang]");
-        if (subElementsWithLang.length > 0) {
-          hasInnerLangAttributes = true;
-          return;
-        }
+          // probably already language tagged, skip. Also franc performs poorly on short texts
+          const subElementsWithLang = el.querySelectorAll("[lang]");
+          if (subElementsWithLang.length > 0) {
+            hasInnerLangAttributes = true;
+            return;
+          }
 
-        // retrieve alt text from images
-        const subElementsWithAltText = el.querySelectorAll("[alt]");
-        if (subElementsWithAltText.length > 0) {
-          subElementsWithAltText.forEach((elWithAlt) => {
-            texts.push({ lang: el.lang, text: elWithAlt.getAttribute("alt") });
+          // retrieve alt text from images
+          const subElementsWithAltText = el.querySelectorAll("[alt]");
+          if (subElementsWithAltText.length > 0) {
+            subElementsWithAltText.forEach((elWithAlt) => {
+              texts.push({
+                lang: elWithAlt.getAttribute("lang") ?? el.lang,
+                text: elWithAlt.getAttribute("alt")?.trim(),
+                origin: "alt",
+              });
+            });
+          }
+
+          // retrieve aria labels
+          const subElementsWithAriaLabel = el.querySelectorAll("[aria-label]");
+          if (subElementsWithAriaLabel.length > 0) {
+            subElementsWithAriaLabel.forEach((elWithLabel) => {
+              texts.push({
+                lang: elWithLabel.getAttribute("lang") ?? el.lang,
+                text: elWithLabel.getAttribute("aria-label")?.trim(),
+                origin: "aria-label",
+              });
+            });
+          }
+
+          texts.push({
+            lang: el.lang,
+            text: el.innerText.replaceAll("\n", " ").trim(),
+            origin: el.nodeName.toLowerCase(),
           });
         }
-
-        texts.push({ lang: el.lang, text: el.innerText.replaceAll("\n", " ") });
-      }
-    );
-    return { texts, hasInnerLangAttributes };
-  });
+      );
+      return { texts, hasInnerLangAttributes };
+    },
+    sectionLangWrapperSelector,
+    minimumTextLengthForDetection
+  );
 
   const possibleLanguages = sectionTest.texts
     .map((t) => t.lang)
@@ -57,14 +81,12 @@ export const runLanguageTest = async (page, subjects) => {
   if (subjects.includes("spansk")) possibleLanguages.push("spa");
 
   const only = [...new Set(possibleLanguages)];
-  log("only languages", only);
+  log("only", only);
 
   const hasForeignLanguage = only.includes("fra") || only.includes("deu") || only.includes("spa");
 
-  const languageIsProbablyMissing = hasForeignLanguage && !sectionTest.hasInnerLangAttributes;
-
   // detect language section texts
-  const languageTextsWithErrorSuggestions = sectionTest.texts
+  const textsWithErrorSuggestions = sectionTest.texts
     .map((t) => {
       const francLang = langFromIsoToFranc(t.lang);
       const mostProbableLangs = francAll(t.text, {
@@ -80,6 +102,7 @@ export const runLanguageTest = async (page, subjects) => {
         mostProbableLang: mostProbableLangs[0],
         secondMostProbableLang: mostProbableLangs[1],
         text: t.text.slice(0, 50) + (t.text.length > 50 ? "..." : ""),
+        origin: t.origin,
       };
     })
     // remove cases where franc can't detect the language
@@ -88,11 +111,16 @@ export const runLanguageTest = async (page, subjects) => {
     .filter((x) => x.mostProbableLang[0] !== x.francLang)
     // remove suggestions that are very uncertain
     .filter((x) => x.secondMostProbableLang[1] <= maxScoreForSecond)
-    .map((x) => ({ lang: x.lang, langSuggestion: langFromFrancToIso(x.mostProbableLang[0]), text: x.text }));
+    .map((x) => ({
+      lang: x.lang,
+      langSuggestion: langFromFrancToIso(x.mostProbableLang[0]),
+      text: x.text,
+      origin: x.origin,
+    }));
 
   return {
-    languageIsProbablyMissing,
-    languageHasErrorSuggestions: languageTextsWithErrorSuggestions.length > 0,
-    languageTextsWithErrorSuggestions,
+    isProbablyMissing: hasForeignLanguage && !sectionTest.hasInnerLangAttributes,
+    hasErrorSuggestions: textsWithErrorSuggestions.length > 0,
+    textsWithErrorSuggestions,
   };
 };
