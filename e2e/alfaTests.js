@@ -24,7 +24,8 @@ export const runAlfaTests = async (page) => {
   }
 
   const document = await page.evaluateHandle(() => window.document);
-  const alfaPage = await getAlfaPage(document);
+  // @ts-ignore
+  const alfaPage = await Puppeteer.toPage(document);
   const rules = getRules(Rules.values());
   const outcomes = await Audit.of(alfaPage, rules).evaluate();
   const failingAudits = [];
@@ -42,15 +43,6 @@ export const runAlfaTests = async (page) => {
     failingAudits: failingAudits.length > 100 ? failingAudits.slice(0, 100) : failingAudits,
     hasFailingAudits: failingAudits.length > 0,
   };
-};
-
-/**
- * @param {import("puppeteer/lib/types.js").ElementHandle<Document>} document
- * @returns {Promise<import("@siteimprove/alfa-web/src/page.js").Page>}
- */
-const getAlfaPage = async (document) => {
-  // @ts-ignore
-  return await Puppeteer.toPage(document);
 };
 
 /**
