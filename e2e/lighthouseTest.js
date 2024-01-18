@@ -24,7 +24,7 @@ const lighthouseOptions = {
  */
 export const runLighthouseTest = async (url, page) => {
   if (process.env.LIGHTHOUSE_DISABLED === "1") {
-    log("lighthouse disabled");
+    log("disabled");
     return {
       enabled: false,
     };
@@ -46,14 +46,17 @@ export const runLighthouseTest = async (url, page) => {
 
   log("end");
 
+  const failingAudits = objectMap(lighthouseRunnerResult.lhr.audits, toSimpleAudit).filter(
+    (a) => a.score !== null && a.score !== 1
+  );
+
   return {
     isEnabled: true,
     isSuccess: !lighthouseRunnerResult.lhr.runtimeError,
     report: lighthouseRunnerResult.lhr,
     a11yScore: lighthouseRunnerResult.lhr?.categories?.accessibility?.score,
-    failingAudits: objectMap(lighthouseRunnerResult.lhr.audits, toSimpleAudit).filter(
-      (a) => a.score !== null && a.score !== 1
-    ),
+    failingAudits,
+    hasFailingAudits: failingAudits.length > 0,
   };
 };
 

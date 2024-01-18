@@ -7,6 +7,7 @@ import { runLanguageTest } from "./languageTest.js";
 import { runHeadingTest } from "./headingTests.js";
 import { runRestTest } from "./restTest.js";
 import { loadPage } from "./pageSetup.js";
+import { runAlfaTests } from "./alfaTests.js";
 
 const log = logger("Main").log;
 
@@ -45,6 +46,11 @@ export const runUrl = async (/** @type {string} */ inputUrl) => {
 
     tempStart = Date.now();
 
+    const alfa = await runAlfaTests(page);
+    durations.alfa = Date.now() - tempStart;
+
+    tempStart = Date.now();
+
     const { report, ...lighthouse } = await runLighthouseTest(href, page);
     durations.lighthouse = Date.now() - tempStart;
 
@@ -63,6 +69,7 @@ export const runUrl = async (/** @type {string} */ inputUrl) => {
       savedAt: new Date().toISOString(),
       timestamp: Date.now(),
       durations,
+      alfa,
       lighthouse,
       activity,
       language,
