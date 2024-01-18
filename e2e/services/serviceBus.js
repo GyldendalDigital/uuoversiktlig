@@ -13,7 +13,7 @@ const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 const queueName = process.env.AZURE_SERVICE_BUS_QUEUE_NAME;
 
 export const subscribeToMessages = async () => {
-  if (process.env.AZURE_SERVICE_BUS_DISABLED === "true") {
+  if (process.env.AZURE_SERVICE_BUS_DISABLED === "1") {
     log("service bus disabled");
     return;
   }

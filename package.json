@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "npx puppeteer browsers install chrome",
     "start": "node index.js",
-    "feed": "node documentFeeder.js"
+    "feed": "node ./feeder/documentFeeder.js"
   },
   "dependencies": {
     "@azure/identity": "^4.0.0",

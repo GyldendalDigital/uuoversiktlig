@@ -1,11 +1,13 @@
 import { Audit } from "@siteimprove/alfa-act";
 import { Puppeteer } from "@siteimprove/alfa-puppeteer";
 import { Rules } from "@siteimprove/alfa-rules";
-import { logger } from "./utils.js";
+import { isSkolestudioPreview, logger } from "./utils.js";
 
 const log = logger("Alfa").log;
 
-const blacklistedRules = ["https://alfa.siteimprove.com/rules/sia-r73", "https://alfa.siteimprove.com/rules/sia-r66"];
+const blacklistedRules = [
+  "https://alfa.siteimprove.com/rules/sia-r57", // The text is not included in a landmark region
+];
 
 /**
  * SiteImprove Alfa tests
@@ -23,20 +25,37 @@ export const runAlfaTests = async (page) => {
     };
   }
 
+  if (isSkolestudioPreview(page.url())) {
+    blacklistedRules.push("https://alfa.siteimprove.com/rules/sia-r87"); // Preview does not have a tabbable element first
+  }
+
   const document = await page.evaluateHandle(() => window.document);
   // @ts-ignore
   const alfaPage = await Puppeteer.toPage(document);
   const rules = getRules(Rules.values());
   const outcomes = await Audit.of(alfaPage, rules).evaluate();
-  const failingAudits = [];
+
+  /** @type {{[key: string]: FailedAudit}} */
+  const o = {};
 
   for (const json of getFailedOutcomes(outcomes)) {
-    failingAudits.push({
-      id: json.rule.uri,
-      title: mapTitle(json.expectations, json.rule),
-      targets: Array.isArray(json.target) ? json.target.map(mapTarget) : [mapTarget(json.target)],
-    });
+    const id = json.rule.uri.replace("https://alfa.siteimprove.com/rules/", "");
+
+    if (!o[id]) {
+      o[id] = {
+        id,
+        title: mapTitle(json.expectations, json.rule),
+        uri: json.rule.uri,
+        targets: Array.isArray(json.target) ? json.target.map(mapTarget) : [mapTarget(json.target)],
+      };
+    } else {
+      o[id].targets = Array.isArray(json.target)
+        ? [...o[id].targets, ...json.target.map(mapTarget)]
+        : [...o[id].targets, mapTarget(json.target)];
+    }
   }
+
+  const failingAudits = Object.values(o);
 
   return {
     isEnabled: true,
@@ -58,21 +77,21 @@ const getRules = (rules) => {
  * @returns {import("@siteimprove/alfa-act/src/outcome.js").Outcome.Failed[]}
  */
 const getFailedOutcomes = (outcomes) => {
-  const failed = [];
+  const failedOutcomeList = [];
   for (const outcome of outcomes) {
     const json = outcome.toJSON();
     if (json.outcome === "failed") {
-      failed.push(json);
+      failedOutcomeList.push(json);
     }
   }
   // @ts-ignore
-  return failed;
+  return failedOutcomeList;
 };
 
 /**
  * @param {import("@siteimprove/alfa-act/src/outcome.js").Outcome["target"]} target
  *
- * @return {{title: string, [key: string]: string}}
+ * @return {Target}
  */
 const mapTarget = (target) => {
   const name = target.name;
@@ -85,7 +104,7 @@ const mapTarget = (target) => {
   const hrefValue = target.attributes?.find((attr) => attr.name === "href")?.value;
 
   return {
-    title: name ?? type ?? value ?? data ?? classValue ?? roleValue ?? idValue ?? hrefValue ?? "unknown",
+    displayName: name ?? type ?? value ?? data ?? "unknown",
     name,
     type,
     value,
@@ -107,3 +126,13 @@ const mapTitle = (expectations, rule) =>
   expectations?.[2]?.[1]?.error?.message ??
   // @ts-ignore
   rule.requirements?.[0]?.title;
+
+/**
+ * Target of a failed outcome.
+ * @typedef {{displayName: string, [key: string]: string}} Target
+ */
+
+/**
+ * Failed audit.
+ * @typedef { {id: string, title: string, uri: string, targets: Target[]}} FailedAudit
+ */

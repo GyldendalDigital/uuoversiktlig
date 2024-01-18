@@ -8,7 +8,9 @@ export const logger = (/** @type {string} */ namespace) => ({
 const logFromNamespace =
   (/** @type {string} */ namespace) =>
   (/** @type {string} */ msg, /** @type {any} */ ...rest) =>
-    process.env.DEBUG === "true" ? console.debug(`[${namespace}] ${msg}`, ...rest) : null;
+    process.env.DEBUG === "1" ? console.debug(`[${namespace}] ${msg}`, ...rest) : null;
+
+export const isSkolestudioPreview = (/** @type {string} */ url) => url.includes("/preview-content/");
 
 export const langFromIsoToFranc = (/** @type {string} */ lang) => {
   if (lang.includes("nn")) return "nno";

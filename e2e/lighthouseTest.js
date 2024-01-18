@@ -36,7 +36,7 @@ export const runLighthouseTest = async (url, page) => {
   try {
     lighthouseRunnerResult = await lighthouse(
       url,
-      { logLevel: process.env.DEBUG === "true" ? "info" : "silent" },
+      { logLevel: process.env.DEBUG === "1" ? "info" : "silent" },
       lighthouseOptions,
       page
     );

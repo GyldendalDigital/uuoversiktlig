@@ -1,5 +1,5 @@
 import { launch } from "puppeteer";
-import { logger } from "./utils.js";
+import { isSkolestudioPreview, logger } from "./utils.js";
 
 const log = logger("PageSetup").log;
 
@@ -15,7 +15,7 @@ export const loadPage = async (url) => {
   const page = await browser.newPage();
 
   // Skolestudio specific: set secret cookie if preview endpoint to get access
-  if (url.includes("/preview-content/")) {
+  if (isSkolestudioPreview(url)) {
     log("setting secret cookie");
     await page.setCookie({
       name: "PreviewContentCookieSecret",
