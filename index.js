@@ -27,6 +27,14 @@ router.get("/developer", async (_req, res) => {
   });
 });
 
+router.get("/alfa", async (_req, res) => {
+  res.render("alfa", {
+    ...searchMetadata(),
+    subtitle: "",
+    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_SERVER,
+  });
+});
+
 router.get("/test", async (req, res) => {
   res.render("manual-url-test", {
     title: "uuoversiktlig",

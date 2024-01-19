@@ -83,10 +83,8 @@ export const runLanguageTest = async (page, subjects) => {
   const only = [...new Set(possibleLanguages)];
   log("only", only);
 
-  const hasForeignLanguage = only.includes("fra") || only.includes("deu") || only.includes("spa");
-
   // detect language section texts
-  const textsWithErrorSuggestions = sectionTest.texts
+  const errorSuggestions = sectionTest.texts
     .map((t) => {
       const francLang = langFromIsoToFranc(t.lang);
       const mostProbableLangs = francAll(t.text, {
@@ -119,8 +117,8 @@ export const runLanguageTest = async (page, subjects) => {
     }));
 
   return {
-    isProbablyMissing: hasForeignLanguage && !sectionTest.hasInnerLangAttributes,
-    hasErrorSuggestions: textsWithErrorSuggestions.length > 0,
-    textsWithErrorSuggestions,
+    isMissingLangAttributesInSection: !sectionTest.hasInnerLangAttributes,
+    errorSuggestions,
+    hasErrorSuggestions: errorSuggestions.length > 0,
   };
 };

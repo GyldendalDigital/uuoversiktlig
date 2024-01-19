@@ -41,8 +41,7 @@ export const runHeadingTest = async (page) => {
     return {
       expandSectionCount,
       expandSectionHeadingCount,
-      expandSectionHeadingExists: expandSectionHeadingCount > 0,
-      allExpandSectionsHaveHeadings: expandSectionCount > 0 && expandSectionCount === expandSectionHeadingCount,
+      expandSectionWithoutHeadingExists: expandSectionCount > expandSectionHeadingCount,
     };
   });
 

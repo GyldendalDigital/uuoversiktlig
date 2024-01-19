@@ -7,7 +7,12 @@ const log = logger("Alfa").log;
 
 const blacklistedRules = [
   "https://alfa.siteimprove.com/rules/sia-r57", // The text is not included in a landmark region
+  "https://alfa.siteimprove.com/rules/sia-r66", // AAA contrast test (already covered in r69)
 ];
+
+const dynamicTitleRules = {
+  "https://alfa.siteimprove.com/rules/sia-r69": "Insufficient text contrast",
+};
 
 /**
  * SiteImprove Alfa tests
@@ -121,6 +126,7 @@ const mapTarget = (target) => {
  * @param {import("@siteimprove/alfa-act/src/outcome.js").Outcome.Failed["rule"]} rule
  */
 const mapTitle = (expectations, rule) =>
+  dynamicTitleRules[rule.uri] ??
   expectations?.[0]?.[1]?.error?.message ??
   expectations?.[1]?.[1]?.error?.message ??
   expectations?.[2]?.[1]?.error?.message ??
