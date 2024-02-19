@@ -29,7 +29,10 @@ const createToggleRefinement = (container, attribute, displayName) =>
     templates: {
       labelText(data, { html }) {
         const count = data.onFacetValue.count;
-        return html`${displayName} <span class="${count ? "ais-RefinementList-count" : null}">${count}</span>`;
+        return html`${displayName}
+          <span class="${count ? "ais-RefinementList-count" : null}"
+            >${count}</span
+          >`;
       },
     },
   });
@@ -61,19 +64,37 @@ const hits = () =>
       item: (hit, { html, components }) => html`
         <article>
           <div class="hit-image">
-            <img src="${createDamUrl(hit.activity.thumbnail)}" />
+            <img src="${createDamUrl(hit.activity?.thumbnail)}" />
           </div>
 
           <div class="hit-content">
-            <h3><a href="${createContentUrl(hit.url)}" target="_blank" rel="noopener noreferrer">${hit.title}</a></h3>
+            <h3>
+              <a
+                href="${createContentUrl(hit.url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+                >${hit.title}</a
+              >
+            </h3>
 
             <p>
-              ${hit.activity.learningMaterials ? ` ${hit.activity.learningMaterials.join(", ")} ` : null}
-              ${hit.activity.subjects ? `${hit.activity.subjects.join(", ")} ` : null}
-              ${hit.activity.grades ? `${hit.activity.grades.join(", ")} ` : null}
+              ${hit.activity.learningMaterials
+                ? ` ${hit.activity.learningMaterials.join(", ")} `
+                : null}
+              ${hit.activity.subjects
+                ? `${hit.activity.subjects.join(", ")} `
+                : null}
+              ${hit.activity.grades
+                ? `${hit.activity.grades.join(", ")} `
+                : null}
             </p>
 
-            <a class="redaptic-link" href="${createRedapticUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
+            <a
+              class="redaptic-link"
+              href="${createRedapticUrl(hit.url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img class="redaptic-svg" src="/redaptic.svg" />
             </a>
 
@@ -81,7 +102,8 @@ const hits = () =>
               ${hit.lighthouse.a11yScore
                 ? html`
                     <p>
-                      Lighthouse score: ${hit.lighthouse.a11yScore * 100}% ${" "}
+                      Lighthouse score: ${hit.lighthouse.a11yScore * 100}%
+                      ${" "}
                       <a
                         href="https://googlechrome.github.io/lighthouse/viewer/?jsonurl=${hit.jsonUrl}"
                         target="_blank"
@@ -95,15 +117,21 @@ const hits = () =>
 
               <p>
                 Overskriftsnivåer:
-                <span class="${isCorrectHeadingOrder(hit) ? "green" : "red"}"> ${createHeaderCountPreview(hit)}</span>
+                <span class="${isCorrectHeadingOrder(hit) ? "green" : "red"}">
+                  ${createHeaderCountPreview(hit)}</span
+                >
               </p>
               ${hit.heading.hasAutoCorrections
                 ? html`<details>
                     <summary class="orange">Autokorrigeringer</summary>
                     ${hit.heading.autoCorrections?.map(
                       (h) => html`<p>
-                        <code class="orange">${translateHeadingLevel(h.originalTag)} </code>
-                        <code class="green">${translateHeadingLevel(h.newTag)}</code>
+                        <code class="orange"
+                          >${translateHeadingLevel(h.originalTag)}
+                        </code>
+                        <code class="green"
+                          >${translateHeadingLevel(h.newTag)}</code
+                        >
                         <br />
                         <i>${h.text}</i>
                       </p>`
@@ -113,7 +141,10 @@ const hits = () =>
               <br />
 
               <p>
-                Språkmarkering: ${hit.language.isMissingLangAttributesInSection ? "Ingen markering i seksjonene" : ""}
+                Språkmarkering:
+                ${hit.language.isMissingLangAttributesInSection
+                  ? "Ingen markering i seksjonene"
+                  : ""}
               </p>
               ${hit.language.hasErrorSuggestions
                 ? html` <details>
@@ -130,9 +161,18 @@ const hits = () =>
                 : null}
               <br />
 
-              <p>${hit.savedAt ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}` : null}</p>
+              <p>
+                ${hit.savedAt
+                  ? `Indeksert: ${new Date(hit.savedAt).toLocaleString()}`
+                  : null}
+              </p>
 
-              <a class="retest-link" href="${createRetestUrl(hit.url)}" target="_blank" rel="noopener noreferrer">
+              <a
+                class="retest-link"
+                href="${createRetestUrl(hit.url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Test på nytt
               </a>
             </details>
@@ -183,7 +223,11 @@ const tags = () => [
 ];
 
 const headingFilters = () => [
-  createToggleRefinement("#hasAutoCorrections", "heading.hasAutoCorrections", "Autokorrigert"),
+  createToggleRefinement(
+    "#hasAutoCorrections",
+    "heading.hasAutoCorrections",
+    "Autokorrigert"
+  ),
   createToggleRefinement("#h3Exists", "heading.h3Exists", "Mangler H1"),
   createToggleRefinement(
     "#isLabelFirstSectionAndMissingHeading",
@@ -198,24 +242,55 @@ const headingFilters = () => [
 ];
 
 const lighthouse = () => [
-  createToggleRefinement("#lighthouse-hasFailingAudits", "lighthouse.hasFailingAudits", "Anmerkninger i Lighthouse"),
-  createRefinementList("#lighthouse-failingAudits", "lighthouse.failingAudits.title"),
+  createToggleRefinement(
+    "#lighthouse-hasFailingAudits",
+    "lighthouse.hasFailingAudits",
+    "Anmerkninger i Lighthouse"
+  ),
+  createRefinementList(
+    "#lighthouse-failingAudits",
+    "lighthouse.failingAudits.title"
+  ),
 ];
 
 const alfa = () => [
-  createToggleRefinement("#alfa-hasFailingAudits", "alfa.hasFailingAudits", "Anmerkninger i Alfa"),
+  createToggleRefinement(
+    "#alfa-hasFailingAudits",
+    "alfa.hasFailingAudits",
+    "Anmerkninger i Alfa"
+  ),
   createRefinementList("#alfa-failingAudits", "alfa.failingAudits.title"),
 ];
 
 const sectionTags = () => [
-  createRefinementList("#sectionElementTags", "activity.sectionElementTags", "Brukte seksjoner"),
-  createRefinementList("#firstSectionElementTag", "activity.firstSectionElementTag", "Første seksjon"),
+  createRefinementList(
+    "#sectionElementTags",
+    "activity.sectionElementTags",
+    "Brukte seksjoner"
+  ),
+  createRefinementList(
+    "#firstSectionElementTag",
+    "activity.firstSectionElementTag",
+    "Første seksjon"
+  ),
 ];
 
 const rest = () => [
-  createToggleRefinement("#isMissingTitle", "activity.isMissingTitle", "Mangler tittel"),
-  createToggleRefinement("#hasIdenticalAriaLabels", "rest.hasIdenticalAriaLabels", "Har identiske ledetekster"),
-  createToggleRefinement("#hasSpecialCharacters", "rest.hasSpecialCharacters", "Har spesialtegn"),
+  createToggleRefinement(
+    "#isMissingTitle",
+    "activity.isMissingTitle",
+    "Mangler tittel"
+  ),
+  createToggleRefinement(
+    "#hasIdenticalAriaLabels",
+    "rest.hasIdenticalAriaLabels",
+    "Har identiske ledetekster"
+  ),
+  createToggleRefinement(
+    "#hasSpecialCharacters",
+    "rest.hasSpecialCharacters",
+    "Har spesialtegn"
+  ),
   createToggleRefinement(
     "#hasTextsFlaggedForUppercase",
     "rest.hasTextsFlaggedForUppercase",
@@ -261,7 +336,11 @@ const activityMode = () =>
   });
 
 const parentDocumentTypes = () =>
-  createRefinementList("#parentDocumentTypes", "activity.parentDocumentTypes", "Referanse fra");
+  createRefinementList(
+    "#parentDocumentTypes",
+    "activity.parentDocumentTypes",
+    "Referanse fra"
+  );
 
 const hostname = () => createRefinementList("#hostname", "hostname", "Domene");
 
@@ -271,23 +350,30 @@ const languageFilters = () => [
     "language.isMissingLangAttributesInSection",
     "Ingen markeringer i seksjonene"
   ),
-  createToggleRefinement("#language-hasErrorSuggestions", "language.hasErrorSuggestions", "Forslag til endringer"),
+  createToggleRefinement(
+    "#language-hasErrorSuggestions",
+    "language.hasErrorSuggestions",
+    "Forslag til endringer"
+  ),
 ];
 
 export const search = () => {
-  const s = instantsearch({
+  const insta = instantsearch({
     indexName: ALGOLIA_INDEX_NAME,
     searchClient: defaultClient,
     routing: true,
   });
-  s.addWidgets([searchBox(), hits(), pagination(), ...tags(), ...headingFilters(), ...languageFilters(), ...rest()]);
-  return s;
-};
 
-export const searchDeveloper = () => {
-  const s = search();
+  insta.addWidgets([
+    searchBox(),
+    hits(),
+    pagination(),
+    ...tags(),
+    ...headingFilters(),
+    ...languageFilters(),
+    ...rest(),
 
-  s.addWidgets([
+    // developer stuff
     ...sectionTags(),
     ...lighthouse(),
     ...alfa(),
@@ -296,5 +382,6 @@ export const searchDeveloper = () => {
     hostname(),
     timestamp(),
   ]);
-  return s;
+
+  return insta;
 };

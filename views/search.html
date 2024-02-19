@@ -11,19 +11,41 @@
       <div class="container">
         <div class="search-panel">
           <div class="search-panel__filters">
+            <details>
+              <summary>Utviklerfiltre</summary>
+              <h2><div id="lighthouse-hasFailingAudits"></div></h2>
+              <div id="lighthouse-failingAudits"></div>
+              <br />
+
+              <h2><div id="alfa-hasFailingAudits"></div></h2>
+              <div id="alfa-failingAudits"></div>
+              <br />
+
+              <div id="sectionElementTags"></div>
+
+              <div id="firstSectionElementTag"></div>
+
+              <div id="mode"></div>
+
+              <div id="parentDocumentTypes"></div>
+
+              <div id="hostname"></div>
+
+              <div id="timestamp"></div>
+            </details>
+
+            <br />
+
             <div class="ais-Panel-header"><span>Overskriftsnivå</span></div>
-            <div id="hasAutoCorrectedHeadings"></div>
-            <div id="h3Count"></div>
-            <div id="h4Count"></div>
-            <div id="h5Count"></div>
-            <div id="h6Count"></div>
-            <div id="scLabelsWithHeadingCount"></div>
-            <div id="scExpandsWithHeadingCount"></div>
+            <div id="hasAutoCorrections"></div>
+            <div id="h3Exists"></div>
+            <div id="isLabelFirstSectionAndMissingHeading"></div>
+            <div id="expandSectionWithoutHeadingExists"></div>
             <br />
 
             <div class="ais-Panel-header"><span>Språkmarkering</span></div>
-            <div id="isForeignLanguageWithoutLangAttributes"></div>
-            <div id="hasIncorrectLanguageTexts"></div>
+            <div id="language-isMissingLangAttributesInSection"></div>
+            <div id="language-hasErrorSuggestions"></div>
             <br />
 
             <div id="learning-materials"></div>
@@ -33,7 +55,9 @@
 
             <div class="ais-Panel-header"><span>Rusk</span></div>
             <div id="isMissingTitle"></div>
-            <div id="identicalLabelCount"></div>
+            <div id="hasIdenticalAriaLabels"></div>
+            <div id="hasSpecialCharacters"></div>
+            <div id="hasTextsFlaggedForUppercase"></div>
             <br />
           </div>
 
@@ -54,7 +78,7 @@
   <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.22.0/dist/algoliasearch.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.63.0/dist/instantsearch.production.min.js"></script>
   <script type="module">
-    import { search } from "./searchWidget.js";
+    import { search } from "./searchInit.js";
     search().start();
   </script>
 </html>

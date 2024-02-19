@@ -12,27 +12,12 @@ const searchMetadata = () => ({
   title: "uuoversiktlig",
   subtitle: "Automatisk testing av publiserte aktiviteter i Redaptic.",
   ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-  ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_FRONTEND,
+  ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_SERVER,
   ALGOLIA_API_KEY_FRONTEND: process.env.ALGOLIA_API_KEY_FRONTEND,
 });
 
 router.get("/", async (_req, res) => {
   res.render("search", searchMetadata());
-});
-
-router.get("/developer", async (_req, res) => {
-  res.render("search-developer", {
-    ...searchMetadata(),
-    subtitle: "Utviklersøk for indekserte sider med tilhørende Lighthouse-rapporter.",
-  });
-});
-
-router.get("/alfa", async (_req, res) => {
-  res.render("alfa", {
-    ...searchMetadata(),
-    subtitle: "",
-    ALGOLIA_INDEX_NAME: process.env.ALGOLIA_INDEX_NAME_SERVER,
-  });
 });
 
 router.get("/test", async (req, res) => {
